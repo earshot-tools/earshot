@@ -13,11 +13,19 @@ Local-only botless meeting capture, transcription, and speaker labeling for Obsi
 
 ## Install
 
+Clone-to-green developer bootstrap (Homebrew deps + pnpm + lefthook + Python venv):
+
+```bash
+bin/setup
+```
+
+Idempotent and safe to re-run. The script validates Xcode Command Line Tools, installs `Brewfile` deps (Node 24, Python 3.12, swiftlint, swift-format, periphery, gitleaks, shellcheck, yamllint, ollama, gh), runs `pnpm install --frozen-lockfile`, wires up lefthook hooks, creates `diarizer/.venv` with dev deps, and checks git signing config.
+
+Or, if you already have Homebrew deps installed and only want JS deps:
+
 ```bash
 pnpm install
 ```
-
-This installs all workspace dependencies and wires up lefthook (pre-commit + pre-push gates).
 
 ## Common commands
 

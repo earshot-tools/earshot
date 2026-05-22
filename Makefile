@@ -58,9 +58,13 @@ dedupe-check: ## Reject duplicate transitive deps.
 
 test-shell: ## Shellcheck on bin/ + tools/ + scripts/ shell.
 	@if ! command -v shellcheck >/dev/null 2>&1; then echo "shellcheck not installed: brew install shellcheck" && exit 1; fi
-	@files=$$(find tools scripts bin -maxdepth 2 -type f -name "*.sh" 2>/dev/null); \
+	@sh_files=$$(find tools scripts bin -maxdepth 2 -type f -name "*.sh" 2>/dev/null); \
+	  bin_files=$$(find bin -maxdepth 1 -type f ! -name "*.sh" 2>/dev/null \
+	    | while read -r f; do head -1 "$$f" | grep -qE '^#!.*(bash|sh)' && echo "$$f"; done); \
+	  files="$$sh_files $$bin_files"; \
+	  files=$$(echo "$$files" | xargs -n1 2>/dev/null | sed '/^$$/d'); \
 	  if [ -z "$$files" ]; then echo "test-shell: no shell scripts found"; exit 0; fi; \
-	  echo "Checking: $$files"; shellcheck $$files
+	  echo "Checking:"; echo "$$files"; shellcheck $$files
 
 yamllint: ## yamllint on .github + lefthook.yml.
 	@if ! command -v yamllint >/dev/null 2>&1; then echo "yamllint not installed: brew install yamllint" && exit 1; fi
