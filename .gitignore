@@ -49,6 +49,10 @@ main.js.map
 *.xcodeproj/xcuserdata/
 *.xcworkspace/xcuserdata/
 
+# Stryker mutation testing artifacts
+**/.stryker-tmp/
+**/reports/mutation/
+
 # Python diarizer
 diarizer/.venv/
 diarizer/.pytest_cache/

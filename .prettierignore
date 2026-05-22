@@ -40,3 +40,7 @@ openapi.json
 # Python venv
 diarizer/.venv
 **/.venv
+
+# Stryker mutation testing artifacts
+**/.stryker-tmp
+**/reports/mutation

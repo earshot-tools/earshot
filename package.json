@@ -18,7 +18,7 @@
     "overrides": {
       "vitest": "^3.0.0",
       "lodash": ">=4.17.21",
-      "@stryker-mutator/util": ">=8.7.1",
+      "@stryker-mutator/util": ">=9.6.1",
       "esbuild": ">=0.25.0",
       "micromatch": ">=4.0.8",
       "js-yaml": ">=4.1.1",

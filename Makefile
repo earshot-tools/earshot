@@ -16,7 +16,7 @@ install: ## Install all workspace deps + lefthook hooks.
 	pnpm install
 
 # ─── Quality gates ────────────────────────────────────────────────────
-.PHONY: format format-check lint lint-fix type-check test test-coverage knip jscpd md-lint license-check audit dedupe-check size-limit stylelint stylelint-fix stryker inline-suppressions branch-name-check test-shell yamllint flaky-check ci-local
+.PHONY: format format-check lint lint-fix type-check test test-coverage knip jscpd md-lint license-check audit dedupe-check size-limit stylelint stylelint-fix stryker stryker-plugin stryker-shared inline-suppressions branch-name-check gitleaks secretlint depcruise openapi-check openapi-lint test-shell yamllint flaky-check ci-local
 format: ## Run Prettier in write mode.
 	pnpm format
 
@@ -78,11 +78,33 @@ stylelint: ## Lint CSS with stylelint (no exclusions beyond build artifacts).
 stylelint-fix: ## Apply stylelint --fix to all CSS.
 	pnpm run stylelint:fix
 
-stryker: ## Mutation testing across plugin/ + shared/ workspaces (slow; opt-in via label).
-	pnpm run stryker
+stryker: stryker-plugin stryker-shared ## Mutation testing across all workspaces.
+
+stryker-plugin: ## Mutation testing on plugin/ (currently scoring 100%).
+	cd plugin && pnpm exec stryker run
+
+stryker-shared: ## Mutation testing on shared/ (scaffolded tests; expected to score low — see ADR E-004).
+	cd shared && pnpm exec stryker run
 
 inline-suppressions: ## Reject new eslint-disable / @ts-expect-error / # noqa lines without reviewer bypass.
 	node scripts/check-inline-suppressions.mjs
+
+gitleaks: ## Full-repo gitleaks scan (lefthook covers staged-only; this covers history).
+	@if ! command -v gitleaks >/dev/null 2>&1; then echo "ERROR: gitleaks not installed: brew install gitleaks"; exit 1; fi
+	gitleaks detect --no-banner --redact
+
+secretlint: ## Full-repo secretlint scan (lefthook covers staged-only via lint-staged).
+	pnpm exec secretlint --maskSecrets "**/*"
+
+depcruise: ## Run dependency-cruiser per workspace (plugin + shared).
+	cd plugin && pnpm run depcruise
+	cd shared && pnpm run depcruise
+
+openapi-check: ## OpenAPI drift check (regenerates and compares).
+	pnpm openapi:check
+
+openapi-lint: ## OpenAPI spectral lint.
+	pnpm openapi:lint
 
 branch-name-check: ## Enforce phase/<n>-... or <area>/feature|fix/... branch naming.
 	@BR="$${GITHUB_HEAD_REF:-$$(git symbolic-ref --short HEAD 2>/dev/null || echo HEAD)}"; \
@@ -95,7 +117,7 @@ branch-name-check: ## Enforce phase/<n>-... or <area>/feature|fix/... branch nam
 	  echo "       allowed area prefixes: plugin shared native diarizer devops docs deps"; \
 	  exit 1
 
-ci-local: format-check lint md-lint knip jscpd license-check audit dedupe-check test-shell yamllint type-check test-coverage flaky-check py-quality size-limit stylelint inline-suppressions branch-name-check ## Mirror of CI gates locally (py-quality requires `make py-install` first).
+ci-local: format-check lint md-lint knip jscpd license-check audit dedupe-check test-shell yamllint type-check test-coverage flaky-check py-quality size-limit stylelint gitleaks secretlint depcruise openapi-check openapi-lint inline-suppressions branch-name-check ## Mirror of CI gates locally (py-quality requires `make py-install` first; gitleaks requires brew install gitleaks).
 
 # ─── Swift gates (macOS only — Swift toolchain not available on ubuntu CI runner) ───
 .PHONY: swift-build swift-test swift-format-check swift-format swift-lint swift-analyze swift-quality
