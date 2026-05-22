@@ -51,7 +51,10 @@ main.js.map
 
 # Stryker mutation testing artifacts
 **/.stryker-tmp/
-**/reports/mutation/
+
+# Generated reports (flaky, jscpd, stryker mutation HTML, etc.)
+reports/
+**/reports/
 
 # Python diarizer
 diarizer/.venv/

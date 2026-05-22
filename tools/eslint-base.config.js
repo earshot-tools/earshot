@@ -1,3 +1,5 @@
+import { noScatteredConstants } from '../eslint-rules/no-scattered-constants.mjs'
+
 import {
   COMPLEXITY_RULES,
   IMPORT_CORRECTNESS_RULES,
@@ -7,6 +9,15 @@ import {
   TYPESCRIPT_TYPE_AWARE_RULES,
   UNICORN_ARRAY_RULES,
 } from './eslint-common-rules.js'
+
+// Local custom rule plugin — ports asal-world's `local/no-scattered-constants`
+// (convention 17). Loaded as a flat-config plugin so workspace eslint.config
+// files don't have to wire it themselves.
+const localPlugin = {
+  rules: {
+    'no-scattered-constants': noScatteredConstants,
+  },
+}
 
 /**
  * Shared ESLint flat-config factory.
@@ -117,6 +128,7 @@ export function createBaseConfig({
         'import-x': plugins.importX,
         sonarjs: plugins.sonarjs,
         unicorn: plugins.unicorn,
+        local: localPlugin,
         ...frontendPlugins,
       },
       rules: {
@@ -129,6 +141,10 @@ export function createBaseConfig({
         ...SONARJS_OVERRIDE_RULES,
         ...IMPORT_CORRECTNESS_RULES,
         ...UNICORN_ARRAY_RULES,
+
+        // Custom (convention 17) — numeric consts must live in
+        // constants.ts / config.ts. See eslint-rules/no-scattered-constants.mjs.
+        'local/no-scattered-constants': 'error',
 
         'no-restricted-syntax': [
           'error',

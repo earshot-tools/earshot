@@ -44,6 +44,12 @@ commit-msg:
 
 pre-push:
   jobs:
+    # Phase 0 — fetch origin/main ONCE before any parallel job runs. Many
+    # parallel checks diff against `origin/main`; without this, each would
+    # fetch independently and risk flaky SSH dropping refs silently.
+    # Continues on fetch failure so offline pushes still proceed.
+    - name: fetch-base
+      run: git fetch --no-tags --quiet origin main 2>/dev/null || true
     - name: parallel-checks
       group:
         parallel: true

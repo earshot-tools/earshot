@@ -17,12 +17,8 @@
     "**/*.stories.tsx",
     "**/migrations/**",
     "**/drizzle/**",
-    "**/*.config.{ts,js,cjs,mjs}",
     "**/.storybook/**",
     "**/main.tsx",
-    "**/src/test/setup.ts",
-    "**/.dependency-cruiser.cjs",
-    "**/.size-limit.cjs",
     "**/.venv/**",
     "diarizer/.venv/**"
   ],

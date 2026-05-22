@@ -10,6 +10,10 @@ build
 coverage
 **/coverage
 
+# Generated reports (flaky, jscpd, stryker, etc.)
+reports
+**/reports
+
 # Lockfiles
 package-lock.json
 **/package-lock.json

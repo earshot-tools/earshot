@@ -39,4 +39,8 @@ ignore: |
   **/node_modules/**
   **/dist/**
   **/build/**
+  # Claude Code worktrees — reviewed in their own branches.
+  .claude/worktrees/**
+  # Scratch / secrets.
   .tmp/**
+  .keys/**

@@ -22,7 +22,7 @@ const COMMON_RULES = [
     from: {
       orphan: true,
       pathNot:
-        '\\.(test|spec|stories)\\.(ts|tsx|js|jsx)$|\\.d\\.ts$|^src/main\\.tsx?$|^src/App\\.tsx?$|vite-env\\.d\\.ts$|vite\\.config|vitest\\.config|tailwind\\.config|eslint\\.config|playwright\\.config|^src/i18n/',
+        '\\.(test|spec|stories)\\.(ts|tsx|js|jsx)$|\\.d\\.ts$|^src/main\\.tsx?$|^src/App\\.tsx?$|vite-env\\.d\\.ts$|vite\\.config|vitest\\.config|tailwind\\.config|eslint\\.config',
     },
     to: {},
   },

@@ -22,10 +22,12 @@ config:
   # PR / issue templates start with `## Linked issue`, not `# Title` (GitHub
   # merges them into a top-level title from the PR/issue title field).
   MD041: false
-  # Allow up to 2 consecutive blanks — EJS-rendered conditionals occasionally
-  # emit an extra newline; visual noise only.
-  MD012:
-    maximum: 2
+  # MD046 (code-block-style): require fenced code blocks. Indented code
+  # blocks are hard to copy and break in monospace contexts. Mirrors
+  # asal-world's explicit setting; default behaviour is the same but
+  # making it explicit pins the contract.
+  MD046:
+    style: fenced
 
 ignores:
   - 'node_modules'
@@ -41,6 +43,8 @@ ignores:
   - 'CHANGELOG.md'
   - '**/CHANGELOG.md'
   - '.claude/worktrees/**'
+  # Scratch / secrets — same waiver as .yamllint + .gitleaks.toml.
+  - '.keys/**'
   # Python venv — third-party package READMEs shouldn't gate our lint.
   - 'diarizer/.venv/**'
   - '**/.venv/**'

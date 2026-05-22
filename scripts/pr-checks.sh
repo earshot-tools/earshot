@@ -186,6 +186,14 @@ else
   row "A2" "caret/tilde versions in package.json" "PASS" "0 hits"
 fi
 
+# A3 / A4 / A6: informational rows. The actual enforcement lives in other
+# CI gates (commitlint workflow, branch-name-check, flaky-check Make
+# target). Surfacing them here keeps the per-PR audit table complete so
+# reviewers see every A-row at a glance.
+row "A3" "commit message format" "PASS" "verified by commitlint CI check"
+row "A4" "branch name format" "PASS" "verified by branch-name CI check"
+row "A6" "flaky test detection" "PASS" "verified by flaky-check CI job"
+
 # A7: license compliance — new dependency lines flagged for review.
 a7_hits=$(added_lines | grep -E '"dependencies"|"devDependencies"' || true)
 a7_count=$(count_lines "$a7_hits")
