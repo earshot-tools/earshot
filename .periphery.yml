@@ -1,9 +1,6 @@
 ---
 # Periphery config for the Earshot native helper.
 # Strict mode: any unused symbol = error.
-project: ''
-schemes: []
-targets: []
 retain_public: false
 retain_assign_only_property_types: []
 retain_objc_accessible: false
