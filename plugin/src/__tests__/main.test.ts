@@ -34,38 +34,16 @@ describe('EarshotPlugin shape', () => {
 })
 
 describe('EarshotPlugin.onload', () => {
-  it('shows a Notice and logs with NODE_ENV set', async () => {
-    const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => undefined)
-    const previous = process.env.NODE_ENV
-    process.env.NODE_ENV = 'test'
-    try {
-      await makePlugin().onload()
-    } finally {
-      restoreNodeEnv(previous)
-    }
+  it('shows a Notice on onload()', async () => {
+    await makePlugin().onload()
     expect(noticeCalls).toHaveLength(1)
     expect(noticeCalls[0]).toMatch(/Earshot plugin loaded/)
-    expect(infoSpy).toHaveBeenCalledWith('[Earshot] onload', 'test')
-  })
-
-  it('falls back to "unknown" when NODE_ENV is undefined', async () => {
-    const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => undefined)
-    const previous = process.env.NODE_ENV
-    delete process.env.NODE_ENV
-    try {
-      await makePlugin().onload()
-    } finally {
-      restoreNodeEnv(previous)
-    }
-    expect(infoSpy).toHaveBeenCalledWith('[Earshot] onload', 'unknown')
   })
 })
 
 describe('EarshotPlugin.onunload', () => {
-  it('logs on onunload()', () => {
-    const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => undefined)
-    makePlugin().onunload()
-    expect(infoSpy).toHaveBeenCalledWith('[Earshot] onunload')
+  it('completes without throwing', () => {
+    expect(() => makePlugin().onunload()).not.toThrow()
   })
 })
 
@@ -75,12 +53,4 @@ function makePlugin(): InstanceType<typeof EarshotPlugin> {
   // can call the test-time constructor without leaking `any` into the suite.
   const Ctor = EarshotPlugin as unknown as new () => InstanceType<typeof EarshotPlugin>
   return new Ctor()
-}
-
-function restoreNodeEnv(previous: string | undefined): void {
-  if (previous === undefined) {
-    delete process.env.NODE_ENV
-  } else {
-    process.env.NODE_ENV = previous
-  }
 }

@@ -1,6 +1,9 @@
 # E-004 — Inline-suppression review and shared/ Stryker score are documented limits, not silent gaps
 
-- **Status:** accepted
+- **Status:** partially superseded by E-005 (2026-05-22) — the
+  inline-suppression PR-review gap is now enforced by
+  `.github/workflows/inline-suppressions.yml`. shared/ Stryker score
+  remains a documented limit.
 - **Date:** 2026-05-22
 - **Issue:** none
 - **Decided by:** Inoyatov Khamidulla

@@ -1,0 +1,87 @@
+---
+name: Inline suppressions
+
+# Closes the E-004 gap: the local `Allow-Suppression:` trailer is
+# committer-controlled. asal-world requires a second-person review approval
+# before inline-suppression PRs merge. This workflow enforces that — if the
+# PR introduces new suppressions, at least one APPROVED review from a user
+# other than the PR author is required before the check passes.
+
+'on':
+  pull_request:
+    types: [opened, synchronize, reopened]
+  pull_request_review:
+    types: [submitted, dismissed]
+
+concurrency:
+  group: inline-suppressions-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  enforce:
+    name: PR-review-aware inline-suppression gate
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Run inline-suppressions check against PR base
+        id: check
+        env:
+          BASE_REF: origin/${{ github.event.pull_request.base.ref }}
+        run: |
+          set -euo pipefail
+          # Run with the PR base as the comparison point — surfaces every
+          # suppression introduced in the PR.
+          if node scripts/check-inline-suppressions.mjs "$BASE_REF"; then
+            echo "has_suppressions=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_suppressions=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Require non-author approving review when suppressions are present
+        if: steps.check.outputs.has_suppressions == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          set -euo pipefail
+          echo "PR ${PR_NUMBER} introduces inline suppressions — verifying"
+          echo "an approving review from a user other than ${PR_AUTHOR}."
+
+          reviews=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/reviews" \
+            --jq '.[] | {state: .state, user: .user.login, submitted_at: .submitted_at}')
+
+          if [ -z "$reviews" ]; then
+            echo "::error::PR introduces inline suppressions but has no reviews yet."
+            echo "Action required: a maintainer other than ${PR_AUTHOR} must"
+            echo "leave an APPROVED review on this PR before merge."
+            exit 1
+          fi
+
+          # Pick the latest review per reviewer (newer state supersedes older).
+          # Approved by a non-author = pass; anything else = fail.
+          approved_non_author=$(echo "$reviews" | jq -s -r \
+            --arg author "$PR_AUTHOR" '
+              group_by(.user)
+              | map(sort_by(.submitted_at) | last)
+              | map(select(.user != $author and .state == "APPROVED"))
+              | length
+            ')
+
+          if [ "$approved_non_author" -ge 1 ]; then
+            echo "OK: at least one APPROVED non-author review present."
+            exit 0
+          fi
+
+          echo "::error::PR introduces inline suppressions but has no APPROVED"
+          echo "review from a user other than ${PR_AUTHOR}."
+          echo "Action required: a maintainer other than ${PR_AUTHOR} must"
+          echo "leave an APPROVED review. Self-approval does not satisfy this gate."
+          exit 1

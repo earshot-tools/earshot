@@ -16,7 +16,7 @@ install: ## Install all workspace deps + lefthook hooks.
 	pnpm install
 
 # ─── Quality gates ────────────────────────────────────────────────────
-.PHONY: format format-check lint lint-fix type-check test test-coverage knip jscpd md-lint license-check audit dedupe-check size-limit stylelint stylelint-fix stryker stryker-plugin stryker-shared inline-suppressions branch-name-check gitleaks secretlint depcruise openapi-check openapi-lint test-shell yamllint flaky-check ci-local
+.PHONY: format format-check lint lint-fix type-check test test-coverage knip jscpd md-lint license-check audit dedupe-check size-limit stylelint stylelint-fix stryker stryker-plugin stryker-shared inline-suppressions branch-name-check gitleaks secretlint depcruise openapi-check openapi-lint test-shell yamllint flaky-check codebase-check pr-checks ai-doc-routing ci-local
 format: ## Run Prettier in write mode.
 	pnpm format
 
@@ -93,6 +93,16 @@ stryker-shared: ## Mutation testing on shared/ (scaffolded tests; expected to sc
 inline-suppressions: ## Reject new eslint-disable / @ts-expect-error / # noqa lines without reviewer bypass.
 	node scripts/check-inline-suppressions.mjs
 
+codebase-check: ## Full-tree static analysis on plugin/src + shared/src (ports asal-world #525).
+	bash scripts/codebase-check.sh
+
+pr-checks: ## PR-violation audit (A1/A2/A7/A8/A9/A10) — usage: make pr-checks PR=<n> | make pr-checks PR=local.
+	@if [ -z "$(PR)" ]; then echo "Usage: make pr-checks PR=<number|local>"; exit 1; fi
+	bash scripts/pr-checks.sh $(PR)
+
+ai-doc-routing: ## Verify AGENTS.md + docs/ai-index.md routing targets exist (ports asal-world).
+	node scripts/check-ai-doc-routing.mjs
+
 gitleaks: ## Full-repo gitleaks scan (lefthook covers staged-only; this covers history).
 	@if ! command -v gitleaks >/dev/null 2>&1; then echo "ERROR: gitleaks not installed: brew install gitleaks"; exit 1; fi
 	gitleaks detect --no-banner --redact
@@ -121,7 +131,7 @@ branch-name-check: ## Enforce phase/<n>-... or <area>/feature|fix/... branch nam
 	  echo "       allowed area prefixes: plugin shared native diarizer devops docs deps"; \
 	  exit 1
 
-ci-local: format-check lint md-lint knip jscpd license-check audit dedupe-check test-shell yamllint type-check test-coverage flaky-check py-quality size-limit stylelint gitleaks secretlint depcruise openapi-check openapi-lint inline-suppressions branch-name-check ## Mirror of CI gates locally (py-quality requires `make py-install` first; gitleaks requires brew install gitleaks).
+ci-local: format-check lint md-lint knip jscpd license-check audit dedupe-check test-shell yamllint type-check test-coverage flaky-check py-quality size-limit stylelint gitleaks secretlint depcruise openapi-check openapi-lint inline-suppressions branch-name-check codebase-check ai-doc-routing ## Mirror of CI gates locally (py-quality requires `make py-install` first; gitleaks requires brew install gitleaks).
 
 # ─── Swift gates (macOS only — Swift toolchain not available on ubuntu CI runner) ───
 .PHONY: swift-build swift-test swift-format-check swift-format swift-lint swift-analyze swift-quality
