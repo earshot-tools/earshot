@@ -64,6 +64,9 @@ jobs:
 
       - name: Shellcheck
         uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          scandir: ./tools
+          additional_files: 'tools/lint-staged-eslint.sh tools/run-size-limit.sh'
         env:
           SHELLCHECK_OPTS: -e SC2086
 
