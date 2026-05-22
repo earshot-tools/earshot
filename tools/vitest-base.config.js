@@ -35,21 +35,27 @@ const COVERAGE_EXCLUDE = [
   'src/main.tsx',
 ]
 
-// Phase-0 tier values — both at 100 (no lowering). The constants exist so
-// Phase 1 can migrate to asal-world's 95/90 production numbers by editing
-// only this file.
+// Phase-1 production tier values — mirror asal-world's numbers.
+// Migrated from flat 100/100/100/100 in P1.0 per ADR E-008. The Obsidian
+// Plugin lifecycle and Vault APIs cannot be 100%-line-covered without
+// unreasonable mocking; the tiered approach is the production-tested
+// asal-world pattern (their `tools/vitest-base.config.js:33-46`).
+//
+// To re-tighten a specific pure-logic path back to 100, pass
+// `extraThresholds: { 'src/util/special/**': { lines: 100, ... } }` to
+// `createVitestConfig`. Path patterns win over the wildcard.
 export const UTILS_THRESHOLDS = {
-  lines: 100,
-  branches: 100,
-  functions: 100,
-  statements: 100,
+  lines: 95,
+  branches: 95,
+  functions: 95,
+  statements: 95,
 }
 
 export const DEFAULT_THRESHOLDS = {
-  lines: 100,
-  branches: 100,
-  functions: 100,
-  statements: 100,
+  lines: 90,
+  branches: 85,
+  functions: 90,
+  statements: 90,
 }
 
 /**

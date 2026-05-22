@@ -24,6 +24,7 @@ jobs:
       - name: Check PR body for HANDOFF v1 marker
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           BRANCH: ${{ github.head_ref }}
         run: |
@@ -36,6 +37,8 @@ jobs:
           fi
 
           # Exempt draft PRs (author still composing).
+          # gh CLI needs either a git checkout or GH_REPO env to resolve the
+          # PR — we set GH_REPO above so no checkout is required.
           IS_DRAFT=$(gh pr view "$PR_NUMBER" --json isDraft --jq '.isDraft')
           if [ "$IS_DRAFT" = "true" ]; then
             echo "HANDOFF not required for draft PRs."

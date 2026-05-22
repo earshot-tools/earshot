@@ -47,6 +47,7 @@ jobs:
       - name: Check reviews + comments for REVIEW-STATE v1
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           PR_NUMBER: ${{ steps.resolve.outputs.pr }}
         run: |
           set -euo pipefail
