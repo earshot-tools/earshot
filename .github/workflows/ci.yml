@@ -45,6 +45,17 @@ jobs:
           shellcheck --version | head -2
           yamllint --version
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Python diarizer dev deps
+        run: |
+          python -m venv diarizer/.venv
+          diarizer/.venv/bin/pip install --upgrade pip
+          diarizer/.venv/bin/pip install -e "diarizer[dev]"
+
       - name: make ci-local
         run: make ci-local
 

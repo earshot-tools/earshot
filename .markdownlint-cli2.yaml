@@ -41,3 +41,6 @@ ignores:
   - 'CHANGELOG.md'
   - '**/CHANGELOG.md'
   - '.claude/worktrees/**'
+  # Python venv — third-party package READMEs shouldn't gate our lint.
+  - 'diarizer/.venv/**'
+  - '**/.venv/**'

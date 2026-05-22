@@ -69,7 +69,7 @@ yamllint: ## yamllint on .github + lefthook.yml.
 flaky-check: ## Fail if any vitest run had retries (post-test).
 	pnpm flaky:check
 
-ci-local: format-check lint md-lint knip jscpd license-check audit dedupe-check test-shell yamllint type-check test-coverage flaky-check ## Mirror of CI gates locally.
+ci-local: format-check lint md-lint knip jscpd license-check audit dedupe-check test-shell yamllint type-check test-coverage flaky-check py-quality ## Mirror of CI gates locally (py-quality requires `make py-install` first).
 
 # ─── Swift gates (macOS only — Swift toolchain not available on ubuntu CI runner) ───
 .PHONY: swift-build swift-test swift-format-check swift-format swift-lint swift-analyze swift-quality
@@ -104,6 +104,44 @@ swift-analyze: ## swiftlint analyze (requires compile_commands.json — emitted 
 	fi
 
 swift-quality: swift-format-check swift-lint swift-build swift-test ## Full Swift Ferrari gate sweep (macOS only).
+
+# ─── Python gates (cross-platform) ──────────────────────────────────────
+# NOTE: All py-* targets require `make py-install` first (creates diarizer/.venv).
+# `py-quality` is included in `ci-local`'s prerequisite chain below.
+# `py-audit` is intentionally NOT in `py-quality` / `ci-local`: it needs
+# network. We'll wire it as a separate scheduled audit-deps job.
+.PHONY: py-install py-lint py-format py-format-check py-typecheck py-test py-audit py-bandit py-quality
+PYTHON ?= python3.12
+DIARIZER_VENV := diarizer/.venv
+
+py-install: ## Create diarizer/.venv and install runtime + dev deps.
+	@command -v $(PYTHON) >/dev/null 2>&1 || { echo "ERROR: $(PYTHON) not installed (brew install python@3.12)"; exit 1; }
+	$(PYTHON) -m venv $(DIARIZER_VENV)
+	$(DIARIZER_VENV)/bin/pip install --upgrade pip
+	$(DIARIZER_VENV)/bin/pip install -e "diarizer[dev]"
+
+py-lint: ## ruff check --select ALL (no exclusions).
+	$(DIARIZER_VENV)/bin/ruff check --no-fix diarizer/earshot_diarizer diarizer/tests
+
+py-format: ## ruff format auto-fix.
+	$(DIARIZER_VENV)/bin/ruff format diarizer/earshot_diarizer diarizer/tests
+
+py-format-check: ## ruff format --check (CI-strict, no auto-fix).
+	$(DIARIZER_VENV)/bin/ruff format --check diarizer/earshot_diarizer diarizer/tests
+
+py-typecheck: ## mypy --strict across earshot_diarizer + tests.
+	cd diarizer && .venv/bin/mypy --strict earshot_diarizer tests
+
+py-test: ## pytest with coverage + 90% threshold.
+	cd diarizer && .venv/bin/pytest
+
+py-bandit: ## bandit security scan.
+	$(DIARIZER_VENV)/bin/bandit -r diarizer/earshot_diarizer -ll
+
+py-audit: ## pip-audit on the diarizer's dependencies (NETWORK; not in ci-local).
+	$(DIARIZER_VENV)/bin/pip-audit -r <($(DIARIZER_VENV)/bin/pip freeze) || $(DIARIZER_VENV)/bin/pip-audit
+
+py-quality: py-format-check py-lint py-typecheck py-test py-bandit ## Full Python Ferrari gate sweep.
 
 
 # ─── Branching / issues / PRs ─────────────────────────────────────────

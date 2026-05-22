@@ -36,3 +36,7 @@ openapi.json
 **/.build
 **/.swiftpm
 **/DerivedData
+
+# Python venv
+diarizer/.venv
+**/.venv

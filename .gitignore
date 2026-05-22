@@ -48,3 +48,12 @@ main.js.map
 **/DerivedData/
 *.xcodeproj/xcuserdata/
 *.xcworkspace/xcuserdata/
+
+# Python diarizer
+diarizer/.venv/
+diarizer/.pytest_cache/
+diarizer/.mypy_cache/
+diarizer/.ruff_cache/
+diarizer/.coverage
+diarizer/htmlcov/
+diarizer/**/*.egg-info/
