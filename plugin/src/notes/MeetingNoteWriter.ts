@@ -47,6 +47,7 @@ export interface MeetingNoteWriterDeps {
 }
 
 const FRONTMATTER_BLOCK = /^---\n([\s\S]*?)\n---\n/
+const CONTROL_CHARS = /[\u0000-\u001f\u007f]/g
 const PATH_ILLEGAL_CHARS = /[\\/:*?"<>|#^[\]]/g
 const COLLAPSE_DASHES = /-+/g
 const EDGE_TRIM_CHARS = new Set(['-', '.'])
@@ -98,7 +99,8 @@ function buildPath(meetingFolder: string, title: string): string {
 }
 
 function sanitizeTitle(title: string): string {
-  const replaced = title.replace(PATH_ILLEGAL_CHARS, '-')
+  const controlStripped = title.replace(CONTROL_CHARS, '-')
+  const replaced = controlStripped.replace(PATH_ILLEGAL_CHARS, '-')
   const collapsed = replaced.replace(COLLAPSE_DASHES, '-')
   return trimEdges(collapsed)
 }
@@ -117,6 +119,10 @@ function trimEdges(value: string): string {
 
 function renderInitialBody(opts: CreateNoteOptions): string {
   const iso = opts.startedAt.toISOString()
+  // The H1 keeps path-illegal chars (so it reads naturally) but MUST strip
+  // control chars — a raw newline would either break the heading or, worst
+  // case, inject a second `---` frontmatter block into the body.
+  const safeTitle = opts.title.replace(CONTROL_CHARS, ' ')
   return (
     `---\n` +
     `status: recording\n` +
@@ -124,7 +130,7 @@ function renderInitialBody(opts: CreateNoteOptions): string {
     `capture_mode: ${opts.captureMode}\n` +
     `---\n` +
     `\n` +
-    `# ${opts.title}\n` +
+    `# ${safeTitle}\n` +
     `\n`
   )
 }
@@ -134,10 +140,9 @@ function updateFrontmatter(content: string, endedIso: string): string {
   if (match === null) {
     return `---\nstatus: completed\nended: ${endedIso}\n---\n\n${content}`
   }
-  // match[1] is the single capture group — guaranteed string when the regex
-  // matches, but `noUncheckedIndexedAccess` narrows it to string|undefined.
-  // The `?? ''` is a type-safety fallback rather than a real code path.
-  const block = match[1] ?? ''
+  // Destructure-with-default satisfies `noUncheckedIndexedAccess` without
+  // introducing an unreachable defensive branch (lifts branch coverage to 100%).
+  const [, block = ''] = match
   const rest = content.slice(match[0].length)
   const updatedBlock = rewriteBlock(block, endedIso)
   return `---\n${updatedBlock}\n---\n${rest}`
@@ -147,9 +152,17 @@ function rewriteBlock(block: string, endedIso: string): string {
   const lines = block.split('\n')
   const entries = lines.map(parseLine)
   const withStatus = applyStatus(entries)
-  return insertEnded(withStatus, endedIso)
-    .map((entry) => (entry.key === null ? entry.raw : `${entry.key}: ${entry.value}`))
-    .join('\n')
+  return insertEnded(withStatus, endedIso).map(renderEntry).join('\n')
+}
+
+function renderEntry(entry: BlockEntry): string {
+  // Only the two keys we actually mutate are re-rendered. Every other line
+  // (including nested-mapping continuation lines like `  start: 0`) is
+  // emitted verbatim from `entry.raw` so indentation is preserved.
+  if (entry.key === 'status' || entry.key === 'ended') {
+    return `${entry.key}: ${entry.value}`
+  }
+  return entry.raw
 }
 
 interface BlockEntry {
