@@ -31,3 +31,8 @@ openapi.json
 
 # Drizzle generated
 **/drizzle
+
+# Swift package build artifacts
+**/.build
+**/.swiftpm
+**/DerivedData

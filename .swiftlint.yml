@@ -184,3 +184,8 @@ excluded:
   - DerivedData
   - Carthage
   - Pods
+  - '**/.build'
+  - '**/.swiftpm'
+  - '**/DerivedData'
+  - native/EarshotCapture/.build
+  - native/EarshotCapture/.swiftpm

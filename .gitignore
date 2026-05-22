@@ -41,3 +41,10 @@ yarn-error.log*
 # Obsidian plugin build output
 main.js
 main.js.map
+
+# Swift package build artifacts
+**/.build/
+**/.swiftpm/
+**/DerivedData/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/

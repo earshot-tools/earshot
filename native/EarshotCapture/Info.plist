@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleIdentifier</key>
+  <string>com.earshot-tools.capture</string>
+  <key>CFBundleName</key>
+  <string>EarshotCapture</string>
+  <key>CFBundleDisplayName</key>
+  <string>Earshot Helper</string>
+  <key>CFBundleExecutable</key>
+  <string>EarshotCLI</string>
+  <key>CFBundleVersion</key>
+  <string>0.1.0</string>
+  <key>CFBundleShortVersionString</key>
+  <string>0.1.0</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>LSMinimumSystemVersion</key>
+  <string>14.2</string>
+  <key>NSHumanReadableCopyright</key>
+  <string>Copyright (c) 2026 Inoyatov Khamidulla and contributors. MIT.</string>
+  <key>NSMicrophoneUsageDescription</key>
+  <string>Earshot records your microphone locally to create meeting transcripts in Obsidian.</string>
+  <key>NSHighResolutionCapable</key>
+  <true/>
+  <key>LSUIElement</key>
+  <true/>
+</dict>
+</plist>
