@@ -5,12 +5,17 @@
 # require_code_owner_reviews: true in branch protection, the bot cannot
 # merge PRs touching these files without owner approval.
 #
-# No default catch-all — only explicitly listed paths require owner
-# review. This lets the bot merge PRs touching unlisted files without
-# approval (e.g., source code under plugin/src/) while still gating
-# every change that could weaken enforcement.
+# Catch-all to @inoyatov so every PR requires the owner's review and the
+# bot cannot self-merge anywhere. Path-specific rules below are kept so
+# future delegation to per-area owners is a one-edit change.
 #
-# Mirrors the asal-world CODEOWNERS pattern. See docs/decisions/engineering/.
+# Earshot diverges from asal-world's "no catch-all" pattern: asal relies on
+# a separate branch-protection rule requiring CODEOWNERS review on
+# specific paths. Earshot adds the catch-all because PR #8 surfaced a path
+# where a devops PR merged without any human in the loop when branch
+# protection wasn't yet configured.
+
+* @inoyatov
 
 # ── Gate files (quality + security infrastructure) ───
 # These control CI gates, linting, branch protection, and security policy.

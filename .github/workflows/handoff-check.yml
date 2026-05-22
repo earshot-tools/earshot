@@ -1,9 +1,14 @@
 ---
 name: HANDOFF v1 check
 
-# Enforces ADR E-006: every non-docs/devops/deps PR must carry a HANDOFF v1
-# block in its body. Draft PRs are exempt (the block is added before
-# requesting review).
+# Enforces ADR E-006: every non-docs/deps PR must carry a HANDOFF v1 block
+# in its body. Draft PRs are exempt (the block is added before requesting
+# review).
+#
+# `devops/` branches are NOT exempted — they can modify quality gates,
+# branch protection, CODEOWNERS, lefthook, and CI workflows. A devops PR
+# that weakens a gate is exactly the kind of change that needs structured
+# review. asal-world exempts devops/ here; earshot deliberately diverges.
 
 'on':
   pull_request:
@@ -30,8 +35,11 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Exempt branches.
-          if [[ "$BRANCH" =~ ^(docs|devops|deps|dependabot)/ ]]; then
+          # Exempt branches — docs-only and dependency-bump branches only.
+          # `devops/` is intentionally NOT exempt: devops PRs touch gate
+          # configs (CODEOWNERS, lefthook, ci.yml, etc.) and need the
+          # same structured review as code PRs.
+          if [[ "$BRANCH" =~ ^(docs|deps|dependabot)/ ]]; then
             echo "HANDOFF not required for branch '$BRANCH'."
             exit 0
           fi
@@ -52,7 +60,7 @@ jobs:
             echo ""
             echo "The PR template at .github/pull_request_template.md includes"
             echo "a HANDOFF v1 scaffold. Fill it in or, for non-code work,"
-            echo "branch from docs/, devops/, or deps/."
+            echo "branch from docs/ or deps/."
             echo ""
             echo "See ADR E-006 for the contract."
             exit 1

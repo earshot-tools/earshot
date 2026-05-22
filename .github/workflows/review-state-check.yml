@@ -5,6 +5,11 @@ name: REVIEW-STATE v1 check
 # containing a REVIEW-STATE v1 block before merge. Re-evaluates on every
 # review/comment event so the check turns green when the qualifying block
 # is posted.
+#
+# `devops/` branches are NOT exempted. They modify quality gates,
+# branch protection, CODEOWNERS, and CI workflows — exactly the surface
+# that needs structured review most. asal-world exempts devops/ here;
+# earshot deliberately diverges (PR #8 surfaced the exemption loophole).
 
 'on':
   pull_request:
@@ -53,7 +58,9 @@ jobs:
           set -euo pipefail
 
           BRANCH=$(gh pr view "$PR_NUMBER" --json headRefName --jq '.headRefName')
-          if [[ "$BRANCH" =~ ^(docs|devops|deps|dependabot)/ ]]; then
+          # `devops/` is intentionally NOT in this exempt list — devops PRs
+          # modify gate configs and must still post a structured review.
+          if [[ "$BRANCH" =~ ^(docs|deps|dependabot)/ ]]; then
             echo "REVIEW-STATE not required for branch '$BRANCH'."
             exit 0
           fi
