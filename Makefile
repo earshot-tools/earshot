@@ -86,13 +86,22 @@ swift-format: ## swift-format format --in-place on Sources/ + Tests/.
 	cd native/EarshotCapture && swift format format --in-place --recursive Sources Tests
 
 swift-lint: ## swiftlint --strict against the entire native package.
+	@if ! command -v swiftlint >/dev/null 2>&1; then echo "ERROR: swiftlint not installed: brew install swiftlint" && exit 1; fi
 	cd native/EarshotCapture && DYLD_FRAMEWORK_PATH=/Library/Developer/CommandLineTools/usr/lib swiftlint lint --config ../../.swiftlint.yml --strict --quiet
 
 swift-analyze: ## swiftlint analyze (requires compile_commands.json — emitted by swift build).
 	@if ! command -v swiftlint >/dev/null 2>&1; then echo "ERROR: swiftlint not installed: brew install swiftlint" && exit 1; fi
-	@cd native/EarshotCapture && swift build --build-tests > /dev/null 2>&1 || true
-	@cd native/EarshotCapture && [ -f compile_commands.json ] || { echo "Skipping analyze: no compile_commands.json"; exit 0; }
-	cd native/EarshotCapture && DYLD_FRAMEWORK_PATH=/Library/Developer/CommandLineTools/usr/lib swiftlint analyze --config ../../.swiftlint.yml --strict --compile-commands compile_commands.json
+	@cd native/EarshotCapture && if ! swift build --build-tests 2> /tmp/earshot-swift-analyze-build.log > /dev/null; then \
+	  echo "ERROR: swift build --build-tests failed (required for swiftlint analyze):"; \
+	  cat /tmp/earshot-swift-analyze-build.log; \
+	  exit 1; \
+	fi
+	@cd native/EarshotCapture && if [ ! -f compile_commands.json ]; then \
+	  echo "Skipping analyze: swift build did not emit compile_commands.json (SwiftPM/CLT quirk)"; \
+	  exit 0; \
+	else \
+	  DYLD_FRAMEWORK_PATH=/Library/Developer/CommandLineTools/usr/lib swiftlint analyze --config ../../.swiftlint.yml --strict --compile-commands compile_commands.json; \
+	fi
 
 swift-quality: swift-format-check swift-lint swift-build swift-test ## Full Swift Ferrari gate sweep (macOS only).
 
