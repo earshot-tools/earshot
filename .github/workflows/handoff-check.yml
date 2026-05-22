@@ -1,0 +1,71 @@
+---
+name: HANDOFF v1 check
+
+# Enforces ADR E-006: every non-docs/devops/deps PR must carry a HANDOFF v1
+# block in its body. Draft PRs are exempt (the block is added before
+# requesting review).
+
+'on':
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: handoff-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: HANDOFF v1 block (E-006)
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+      contents: read
+    steps:
+      - name: Check PR body for HANDOFF v1 marker
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+
+          # Exempt branches.
+          if [[ "$BRANCH" =~ ^(docs|devops|deps|dependabot)/ ]]; then
+            echo "HANDOFF not required for branch '$BRANCH'."
+            exit 0
+          fi
+
+          # Exempt draft PRs (author still composing).
+          IS_DRAFT=$(gh pr view "$PR_NUMBER" --json isDraft --jq '.isDraft')
+          if [ "$IS_DRAFT" = "true" ]; then
+            echo "HANDOFF not required for draft PRs."
+            exit 0
+          fi
+
+          PR_BODY=$(gh pr view "$PR_NUMBER" --json body --jq '.body')
+
+          if ! echo "$PR_BODY" | grep -q '<!-- HANDOFF v1'; then
+            echo "::error::PR body is missing the HANDOFF v1 block."
+            echo ""
+            echo "The PR template at .github/pull_request_template.md includes"
+            echo "a HANDOFF v1 scaffold. Fill it in or, for non-code work,"
+            echo "branch from docs/, devops/, or deps/."
+            echo ""
+            echo "See ADR E-006 for the contract."
+            exit 1
+          fi
+
+          # Soft schema validation — present but malformed gets a warning,
+          # not a hard fail (author fixes on next round).
+          missing=""
+          echo "$PR_BODY" | grep -q 'issue:' || missing="$missing issue"
+          echo "$PR_BODY" | grep -q 'scope:' || missing="$missing scope"
+          echo "$PR_BODY" | grep -q 'ac-matrix:' || missing="$missing ac-matrix"
+          echo "$PR_BODY" | grep -q 'self-review:' || missing="$missing self-review"
+
+          if [ -n "$missing" ]; then
+            echo "::warning::HANDOFF v1 present but missing fields:$missing"
+            echo "::warning::Fix on next round. See ADR E-006 for the schema."
+          else
+            echo "HANDOFF v1 present and schema-valid."
+          fi

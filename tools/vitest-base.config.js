@@ -1,14 +1,23 @@
 /**
  * Shared Vitest base config for every workspace.
  *
- * Coverage thresholds default to 100/100/100/100 (lines, functions, branches,
- * statements). If a hello-world or real change drops below 100 %, add the
- * test — do NOT lower the threshold. Strict mode rule.
+ * Coverage uses path-tiered thresholds mirroring asal-world's
+ * `tools/vitest-base.config.js`:
+ *   - `src/utils/**` (pure logic, no framework deps) gets UTILS_THRESHOLDS.
+ *   - Everything else gets DEFAULT_THRESHOLDS.
  *
- * Flaky test tracking: in CI we retry failing tests twice and log every retry
+ * Phase-0 numbers are kept at 100/100/100/100 across both tiers because the
+ * scaffolded code is trivial enough to reach 100 % and lowering pre-Phase-1
+ * would be a real Ferrari-mode regression. When real plugin/native code
+ * lands in Phase 1 and 100 % becomes either untestable or churny, drop
+ * DEFAULT to `{ lines: 90, branches: 85, functions: 90, statements: 90 }`
+ * and UTILS to `{ lines: 95, branches: 95, functions: 95, statements: 95 }`
+ * per asal-world's production-tested numbers. Document the move in an ADR.
+ *
+ * Flaky-test tracking: CI retries failing tests twice and logs every retry
  * to a per-workspace flaky-report.json via a custom reporter. A post-run
- * script (`scripts/check-flaky.mjs`) fails the build if any test required even
- * one retry. Locally `retry: 0` so flakes fail loud.
+ * script (`scripts/check-flaky.mjs`) fails the build if any test required
+ * even one retry. Locally `retry: 0` so flakes fail loud.
  */
 
 import { createFlakyReporter } from './vitest-flaky-reporter.js'
@@ -26,7 +35,17 @@ const COVERAGE_EXCLUDE = [
   'src/main.tsx',
 ]
 
-const STRICT_THRESHOLDS = {
+// Phase-0 tier values — both at 100 (no lowering). The constants exist so
+// Phase 1 can migrate to asal-world's 95/90 production numbers by editing
+// only this file.
+export const UTILS_THRESHOLDS = {
+  lines: 100,
+  branches: 100,
+  functions: 100,
+  statements: 100,
+}
+
+export const DEFAULT_THRESHOLDS = {
   lines: 100,
   branches: 100,
   functions: 100,
@@ -89,8 +108,9 @@ export function createVitestConfig({
         include: COVERAGE_INCLUDE,
         exclude: COVERAGE_EXCLUDE,
         thresholds: {
+          'src/utils/**': UTILS_THRESHOLDS,
           ...extraThresholds,
-          '*': STRICT_THRESHOLDS,
+          '*': DEFAULT_THRESHOLDS,
         },
       },
     },

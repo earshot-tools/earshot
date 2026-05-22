@@ -6,9 +6,14 @@
     ".": {
       "entry": ["scripts/*.{js,mjs}"],
       "project": ["scripts/**/*.{js,mjs}"],
-      "ignoreBinaries": ["storybook", "playwright", "tools/lint-staged-eslint.sh"],
-      "ignoreDependencies": ["@secretlint/secretlint-rule-preset-recommend"]
+      "ignoreBinaries": ["storybook", "playwright", "stryker", "tools/lint-staged-eslint.sh"],
+      "ignoreDependencies": [
+        "@earshot-tools/earshot-plugin",
+        "@secretlint/secretlint-rule-preset-recommend",
+        "stylelint-config-recommended"
+      ]
     },
+    "plugin": {},
     "shared": {}
   }
 }

@@ -1,0 +1,51 @@
+---
+name: Stryker (mutation testing)
+
+# Label-gated to keep PR feedback fast. Apply `run-mutation-tests` to a PR to
+# exercise the plugin/ mutation suite (currently 100% per E-004); shared/ is
+# documented as a known limit and not run here.
+'on':
+  pull_request:
+    types: [labeled, synchronize, reopened]
+  workflow_dispatch:
+
+concurrency:
+  group: stryker-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  stryker-plugin:
+    name: Stryker plugin/ (mutation score >= 80%)
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.pull_request.labels.*.name, 'run-mutation-tests')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: make stryker-plugin
+        run: make stryker-plugin
+
+      - name: Upload mutation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stryker-plugin-report
+          path: plugin/reports/mutation/
+          if-no-files-found: ignore
+          retention-days: 14

@@ -18,7 +18,7 @@
     "overrides": {
       "vitest": "^3.0.0",
       "lodash": ">=4.17.21",
-      "@stryker-mutator/util": ">=8.7.1",
+      "@stryker-mutator/util": ">=9.6.1",
       "esbuild": ">=0.25.0",
       "micromatch": ">=4.0.8",
       "js-yaml": ">=4.1.1",
@@ -41,6 +41,8 @@
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "prepare": "lefthook install --reset-hooks-path",
+    "build": "node esbuild.config.mjs production",
+    "dev": "node esbuild.config.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "pnpm -r --stream run lint",
@@ -58,14 +60,35 @@
     "flaky:check": "node scripts/check-flaky.mjs",
     "openapi": "tsx scripts/generate-openapi.mjs",
     "openapi:check": "tsx scripts/check-openapi.mjs",
-    "openapi:lint": "spectral lint openapi.json --fail-severity=warn"
+    "openapi:lint": "spectral lint openapi.json --fail-severity=warn",
+    "size": "pnpm run build && size-limit",
+    "stylelint": "stylelint \"**/*.css\"",
+    "stylelint:fix": "stylelint --fix \"**/*.css\"",
+    "stryker": "pnpm -r --filter \"./plugin\" --filter \"./shared\" exec stryker run",
+    "check-inline-suppressions": "node scripts/check-inline-suppressions.mjs"
   },
+  "size-limit": [
+    {
+      "name": "main.js (Obsidian plugin bundle, gzipped)",
+      "path": "main.js",
+      "gzip": true,
+      "limit": "250 KB"
+    }
+  ],
   "lint-staged": {
+    "plugin/**/*.ts": [
+      "tools/lint-staged-eslint.sh plugin",
+      "prettier --write"
+    ],
     "shared/**/*.ts": [
       "tools/lint-staged-eslint.sh shared",
       "prettier --write"
     ],
-    "**/*.{ts,tsx,js,jsx,mjs,cjs,json,md,yml,yaml,css}": [
+    "**/*.css": [
+      "stylelint --fix",
+      "prettier --write"
+    ],
+    "**/*.{ts,tsx,js,jsx,mjs,cjs,json,md,yml,yaml}": [
       "prettier --write"
     ],
     "*": [
@@ -75,7 +98,12 @@
   "devDependencies": {
     "@commitlint/cli": "19.6.1",
     "@commitlint/config-conventional": "19.6.0",
+    "@earshot-tools/earshot-plugin": "workspace:*",
+    "@earshot-tools/earshot-shared": "workspace:*",
     "@secretlint/secretlint-rule-preset-recommend": "11.6.0",
+    "@size-limit/file": "11.2.0",
+    "@stoplight/spectral-cli": "6.14.2",
+    "esbuild": "0.28.0",
     "jscpd": "4.0.9",
     "knip": "6.3.1",
     "lefthook": "2.1.6",
@@ -85,11 +113,13 @@
     "only-allow": "1.2.2",
     "prettier": "3.4.0",
     "secretlint": "11.6.0",
-    "@stoplight/spectral-cli": "6.14.2",
+    "size-limit": "11.2.0",
+    "stylelint": "16.10.0",
+    "stylelint-config-recommended": "14.0.1",
+    "stylelint-config-standard": "36.0.1",
     "tsx": "4.19.2",
     "typescript": "5.6.3",
     "zod": "3.23.8",
-    "zod-to-json-schema": "3.23.5",
-    "@earshot-tools/earshot-shared": "workspace:*"
+    "zod-to-json-schema": "3.23.5"
   }
 }

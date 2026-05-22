@@ -54,3 +54,32 @@ Closes #
 - [ ] No secrets committed
 - [ ] If API changed: `shared/` types and schemas updated
 - [ ] PR under 400 lines (or justified)
+
+<!-- HANDOFF v1
+issue: #<issue-number>
+scope:
+  - <workspace/path>
+  - <workspace/path>
+ac-matrix:
+  - id: AC1
+    description: <acceptance criterion>
+    evidence: <test file or manual verification reference>
+self-review:
+  - convention-compliance: <pass|fail|n/a>
+  - codebase-check: <pass|fail|n/a>
+  - pr-checks: <pass|fail|n/a>
+  - ci-local: <pass|fail|n/a>
+notes: |
+  <optional context for the reviewer — known limitations,
+  follow-ups, deferred work referenced by issue number>
+-->
+
+<!--
+Required by ADR E-006. The author-reviewer contract: this PR-body block
+declares scope, acceptance evidence, and self-review status. The reviewer
+posts a `REVIEW-STATE v1` block in their review/comment summarising
+verdict, phase results, and drift. The `pr-checks.sh` A11/A12 rows and
+the GitHub workflows under `.github/workflows/handoff-check.yml` and
+`.github/workflows/review-state-check.yml` enforce presence on every
+non-`docs/`/`devops/`/`deps/` code PR.
+-->

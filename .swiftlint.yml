@@ -1,0 +1,191 @@
+---
+# SwiftLint Ferrari config for Earshot native helper.
+# Mirrors the no-exclusions philosophy of the asal-world TypeScript Ferrari port:
+# zero `disabled_rules`, every applicable opt-in rule explicitly listed,
+# custom regex rules for project-specific bans, treat all warnings as errors.
+
+strict: true
+disabled_rules: []
+check_for_updates: false
+reporter: 'github-actions-logging'
+
+only_rules:
+  # === Style + correctness (default rules we want explicit) ===
+  - colon
+  - comma
+  - control_statement
+  - empty_enum_arguments
+  - empty_parameters
+  - empty_parentheses_with_trailing_closure
+  - leading_whitespace
+  - mark
+  - opening_brace
+  - function_name_whitespace
+  - return_arrow_whitespace
+  - statement_position
+  - todo
+  - trailing_comma
+  - trailing_newline
+  - trailing_semicolon
+  - trailing_whitespace
+  - unneeded_break_in_switch
+  - vertical_whitespace
+  - void_return
+
+  # === Safety / no force-* ===
+  - force_cast
+  - force_try
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - discouraged_assert
+  - discouraged_optional_boolean
+  - discouraged_optional_collection
+  - dynamic_inline
+  - generic_type_name
+  - identifier_name
+  - large_tuple
+  - legacy_cggeometry_functions
+  - legacy_constant
+  - legacy_constructor
+  - legacy_hashing
+  - legacy_multiple
+  - legacy_nsgeometry_functions
+  - legacy_objc_type
+  - legacy_random
+
+  # === Type/explicit-access strictness ===
+  - explicit_acl
+  - explicit_top_level_acl
+  - explicit_init
+  - prefer_self_type_over_type_of_self
+  - implicit_optional_initialization
+  - redundant_set_access_control
+  - redundant_string_enum_value
+  - redundant_type_annotation
+  - redundant_void_return
+
+  # === Complexity caps ===
+  - cyclomatic_complexity
+  - function_body_length
+  - function_parameter_count
+  - file_length
+  - line_length
+  - nesting
+  - type_body_length
+
+  # === Modern collection patterns ===
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - contains_over_first_not_nil
+  - contains_over_range_nil_comparison
+  - first_where
+  - last_where
+  - for_where
+  - flatmap_over_map_reduce
+  - reduce_into
+  - reduce_boolean
+  - sorted_first_last
+  - empty_count
+  - empty_string
+  - empty_collection_literal
+  - is_disjoint
+  - joined_default_parameter
+
+  # === Import correctness ===
+  - duplicate_imports
+  - sorted_imports
+
+  # === Duplicate / smell ===
+  - duplicate_conditions
+  - duplicate_enum_cases
+  - identical_operands
+  - static_operator
+  - no_extension_access_modifier
+  - no_grouping_extension
+
+  # === Concurrency-aware ===
+  - async_without_await
+  - unowned_variable_capture
+  - weak_delegate
+
+  # === Custom rules (defined below) ===
+  - no_print
+  - no_scattered_constants
+  - no_fileprivate
+  - no_try_bang
+  - todo_format
+
+analyzer_rules:
+  - explicit_self
+  - unused_import
+  - unused_declaration
+  - capture_variable
+  - typesafe_array_init
+
+# Caps mirroring the TS Ferrari complexity block
+function_body_length:
+  warning: 30
+  error: 50
+type_body_length:
+  warning: 200
+  error: 300
+file_length:
+  warning: 250
+  error: 300
+function_parameter_count:
+  warning: 3
+  error: 3
+cyclomatic_complexity:
+  warning: 8
+  error: 10
+nesting:
+  type_level: 1
+  function_level: 3
+identifier_name:
+  min_length: 2
+  excluded:
+    - i
+    - j
+    - t
+    - _
+
+custom_rules:
+  no_print:
+    name: 'No print() — use Logger'
+    regex: '(?<!\w)print\('
+    message: 'Use OSLog/Logger, not print()'
+    excluded:
+      - '.*main\.swift$'
+    severity: error
+  no_scattered_constants:
+    name: 'Numeric constants must live in Constants.swift or Config.swift'
+    regex: 'let\s+\w+\s*:\s*(Int|Double|Float|TimeInterval|UInt\d+|Int\d+)\s*=\s*-?\d'
+    message: 'Move numeric constants to a dedicated Constants.swift or Config.swift'
+    excluded:
+      - '.*(Constants|Config)\.swift$'
+    severity: error
+  no_fileprivate:
+    name: 'Prefer private over fileprivate'
+    regex: '\bfileprivate\b'
+    severity: error
+  no_try_bang:
+    name: 'No try! — handle errors explicitly'
+    regex: 'try!\s'
+    severity: error
+  todo_format:
+    name: 'TODO must reference an issue'
+    regex: '(TODO|FIXME)(?!\(#\d+\))'
+    message: 'TODO/FIXME must be in the form TODO(#issue-number)'
+    severity: error
+
+excluded:
+  - .build
+  - .swiftpm
+  - DerivedData
+  - Carthage
+  - Pods
+  - '**/.build'
+  - '**/.swiftpm'
+  - '**/DerivedData'
+  - native/EarshotCapture/.build
+  - native/EarshotCapture/.swiftpm

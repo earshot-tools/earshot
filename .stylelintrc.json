@@ -1,0 +1,31 @@
+{
+  "extends": ["stylelint-config-standard"],
+  "rules": {
+    "color-hex-length": "long",
+    "selector-class-pattern": [
+      "^[a-z][a-zA-Z0-9-]*$",
+      {
+        "message": "Use kebab-case or camelCase class names (no leading digits, no underscores)."
+      }
+    ],
+    "no-empty-source": null,
+    "comment-empty-line-before": [
+      "always",
+      { "except": ["first-nested"], "ignore": ["after-comment", "stylelint-commands"] }
+    ]
+  },
+  "ignoreFiles": [
+    "node_modules/**",
+    "**/node_modules/**",
+    "dist/**",
+    "**/dist/**",
+    "main.js",
+    "main.js.map",
+    "coverage/**",
+    "**/coverage/**",
+    "htmlcov/**",
+    "**/htmlcov/**",
+    "diarizer/.venv/**",
+    "**/.venv/**"
+  ]
+}

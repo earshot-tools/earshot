@@ -1,0 +1,94 @@
+---
+name: REVIEW-STATE v1 check
+
+# Enforces ADR E-006: every code PR must receive a review or comment
+# containing a REVIEW-STATE v1 block before merge. Re-evaluates on every
+# review/comment event so the check turns green when the qualifying block
+# is posted.
+
+'on':
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  pull_request_review:
+    types: [submitted, dismissed]
+  issue_comment:
+    types: [created, edited, deleted]
+
+concurrency:
+  group: review-state-${{ github.event.pull_request.number || github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: REVIEW-STATE v1 block (E-006)
+    # issue_comment fires on issues too — only run for PR comments.
+    if: >-
+      github.event_name != 'issue_comment' ||
+      github.event.issue.pull_request != null
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+      contents: read
+      issues: read
+    steps:
+      - name: Resolve PR number
+        id: resolve
+        env:
+          PR_FROM_PR: ${{ github.event.pull_request.number }}
+          PR_FROM_ISSUE: ${{ github.event.issue.number }}
+        run: |
+          set -euo pipefail
+          if [ -n "${PR_FROM_PR:-}" ]; then
+            echo "pr=$PR_FROM_PR" >> "$GITHUB_OUTPUT"
+          else
+            echo "pr=$PR_FROM_ISSUE" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check reviews + comments for REVIEW-STATE v1
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.resolve.outputs.pr }}
+        run: |
+          set -euo pipefail
+
+          BRANCH=$(gh pr view "$PR_NUMBER" --json headRefName --jq '.headRefName')
+          if [[ "$BRANCH" =~ ^(docs|devops|deps|dependabot)/ ]]; then
+            echo "REVIEW-STATE not required for branch '$BRANCH'."
+            exit 0
+          fi
+
+          IS_DRAFT=$(gh pr view "$PR_NUMBER" --json isDraft --jq '.isDraft')
+          if [ "$IS_DRAFT" = "true" ]; then
+            echo "REVIEW-STATE not required for draft PRs."
+            exit 0
+          fi
+
+          review_bodies=$(gh pr view "$PR_NUMBER" --json reviews \
+            --jq '.reviews[].body // empty' || true)
+          comment_bodies=$(gh pr view "$PR_NUMBER" --json comments \
+            --jq '.comments[].body // empty' || true)
+
+          if echo "$review_bodies" "$comment_bodies" | grep -q 'REVIEW-STATE v1'; then
+            echo "REVIEW-STATE v1 block found."
+            exit 0
+          fi
+
+          echo "::error::No REVIEW-STATE v1 block found in any review or comment."
+          echo ""
+          echo "Reviewer must post a block of the form:"
+          echo "  <!-- REVIEW-STATE v1"
+          echo "  verdict: <approve|request-changes|comment>"
+          echo "  phases:"
+          echo "    - phase: convention-compliance"
+          echo "      result: <pass|fail|skipped>"
+          echo "    - phase: codebase-check"
+          echo "      result: <pass|fail|skipped>"
+          echo "    - phase: ferrari-gates"
+          echo "      result: <pass|fail|skipped>"
+          echo "  drift: <count or 0>"
+          echo "  notes: |"
+          echo "    <free-form summary>"
+          echo "  -->"
+          echo ""
+          echo "See ADR E-006 for the full schema."
+          exit 1

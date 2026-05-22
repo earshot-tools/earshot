@@ -37,3 +37,27 @@ yarn-error.log*
 *.tsbuildinfo
 .next/
 .vercel/
+
+# Obsidian plugin build output
+main.js
+main.js.map
+
+# Swift package build artifacts
+**/.build/
+**/.swiftpm/
+**/DerivedData/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+
+# Stryker mutation testing artifacts
+**/.stryker-tmp/
+**/reports/mutation/
+
+# Python diarizer
+diarizer/.venv/
+diarizer/.pytest_cache/
+diarizer/.mypy_cache/
+diarizer/.ruff_cache/
+diarizer/.coverage
+diarizer/htmlcov/
+diarizer/**/*.egg-info/

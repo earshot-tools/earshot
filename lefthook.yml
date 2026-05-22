@@ -81,6 +81,12 @@ pre-push:
               yamllint -c .yamllint .github/ lefthook.yml
           - name: type-check
             run: pnpm type-check
+          - name: plugin-lint
+            run: cd plugin && pnpm run lint
+          - name: plugin-depcruise
+            run: cd plugin && pnpm run depcruise
+          - name: plugin-test-coverage
+            run: cd plugin && CI=true pnpm run test:coverage
           - name: shared-lint
             run: cd shared && pnpm run lint
           - name: shared-depcruise
@@ -91,6 +97,74 @@ pre-push:
             run: pnpm openapi:check
           - name: openapi-lint
             run: pnpm openapi:lint
+          - name: swift-build
+            tags: macos
+            skip:
+              - run: '[ "$(uname)" != "Darwin" ]'
+            run: |
+              if ! command -v swift >/dev/null 2>&1; then
+                echo "swift not installed; skipping swift-build"
+                exit 0
+              fi
+              make swift-build
+          - name: swift-test
+            tags: macos
+            skip:
+              - run: '[ "$(uname)" != "Darwin" ]'
+            run: |
+              if ! command -v swift >/dev/null 2>&1; then
+                echo "swift not installed; skipping swift-test"
+                exit 0
+              fi
+              make swift-test
+          - name: swift-format-check
+            tags: macos
+            skip:
+              - run: '[ "$(uname)" != "Darwin" ]'
+            run: |
+              if ! command -v swift-format >/dev/null 2>&1; then
+                echo "swift-format not installed; skipping swift-format-check"
+                exit 0
+              fi
+              make swift-format-check
+          - name: swift-lint
+            tags: macos
+            skip:
+              - run: '[ "$(uname)" != "Darwin" ]'
+            run: |
+              if ! command -v swiftlint >/dev/null 2>&1; then
+                echo "swiftlint not installed; skipping swift-lint"
+                exit 0
+              fi
+              make swift-lint
+          - name: py-lint
+            run: |
+              if [ ! -d diarizer/.venv ]; then
+                echo "py-lint: skipping — run 'make py-install' first"
+                exit 0
+              fi
+              make py-lint
+          - name: py-typecheck
+            run: |
+              if [ ! -d diarizer/.venv ]; then
+                echo "py-typecheck: skipping — run 'make py-install' first"
+                exit 0
+              fi
+              make py-typecheck
+          - name: py-test
+            run: |
+              if [ ! -d diarizer/.venv ]; then
+                echo "py-test: skipping — run 'make py-install' first"
+                exit 0
+              fi
+              make py-test
+          - name: py-bandit
+            run: |
+              if [ ! -d diarizer/.venv ]; then
+                echo "py-bandit: skipping — run 'make py-install' first"
+                exit 0
+              fi
+              make py-bandit
 
     - name: flaky-check
       run: node scripts/check-flaky.mjs

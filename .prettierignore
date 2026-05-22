@@ -31,3 +31,16 @@ openapi.json
 
 # Drizzle generated
 **/drizzle
+
+# Swift package build artifacts
+**/.build
+**/.swiftpm
+**/DerivedData
+
+# Python venv
+diarizer/.venv
+**/.venv
+
+# Stryker mutation testing artifacts
+**/.stryker-tmp
+**/reports/mutation

@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Inoyatov Khamidulla and contributors.
+#
+# Earshot — clone-to-green developer bootstrap.
+#
+# Idempotent. Safe to re-run. Exits 0 only when every prerequisite is in place
+# and `make ci-local` is expected to pass on this machine.
+#
+# Steps:
+#   1. Validate Xcode Command Line Tools (Swift toolchain).
+#   2. Install Homebrew deps from Brewfile (skips already-installed).
+#   3. pnpm install --frozen-lockfile (Node monorepo).
+#   4. Install lefthook git hooks.
+#   5. Create diarizer/.venv and install Python dev deps.
+#   6. Sanity-check git signing config.
+
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+# Colours (NO_COLOR=1 disables).
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+  C_OK=$'\033[1;32m'
+  C_WARN=$'\033[1;33m'
+  C_ERR=$'\033[1;31m'
+  C_HDR=$'\033[1;36m'
+  C_OFF=$'\033[0m'
+else
+  C_OK=''; C_WARN=''; C_ERR=''; C_HDR=''; C_OFF=''
+fi
+
+step() { printf '%s==>%s %s\n' "$C_HDR" "$C_OFF" "$1"; }
+ok()   { printf '%s OK%s %s\n' "$C_OK" "$C_OFF" "$1"; }
+warn() { printf '%sWARN%s %s\n' "$C_WARN" "$C_OFF" "$1" 1>&2; }
+die()  { printf '%sFAIL%s %s\n' "$C_ERR" "$C_OFF" "$1" 1>&2; exit 1; }
+
+# ── 1. Xcode CLT ──────────────────────────────────────────────────────────────
+step "Xcode Command Line Tools"
+if ! xcode-select -p >/dev/null 2>&1; then
+  die "Xcode Command Line Tools not installed. Run: xcode-select --install"
+fi
+ok "xcode-select: $(xcode-select -p)"
+
+if ! xcrun --find swift >/dev/null 2>&1; then
+  die "Swift toolchain not found via xcrun. Reinstall CLT or Xcode."
+fi
+SWIFT_VER=$(swift --version 2>&1 | head -1)
+ok "swift: $SWIFT_VER"
+
+# ── 2. Homebrew + Brewfile ────────────────────────────────────────────────────
+step "Homebrew dependencies (Brewfile)"
+if ! command -v brew >/dev/null 2>&1; then
+  die "Homebrew not installed. Install from https://brew.sh"
+fi
+brew bundle install --file=./Brewfile --no-lock
+ok "brew bundle install: complete"
+
+# ── 3. pnpm install (Node monorepo) ───────────────────────────────────────────
+step "pnpm install (Node + workspaces)"
+if ! command -v pnpm >/dev/null 2>&1; then
+  die "pnpm not on PATH after brew install. Check shell PATH."
+fi
+pnpm install --frozen-lockfile
+ok "pnpm install: complete"
+
+# ── 4. Lefthook hooks ─────────────────────────────────────────────────────────
+step "Lefthook git hooks"
+pnpm exec lefthook install --reset-hooks-path >/dev/null
+ok "lefthook hooks installed in .git/hooks/"
+
+# ── 5. Python diarizer venv ───────────────────────────────────────────────────
+step "Python diarizer venv + dev deps"
+if ! command -v python3.12 >/dev/null 2>&1; then
+  die "python3.12 not on PATH. Brew should have installed it."
+fi
+if [ ! -d diarizer/.venv ]; then
+  python3.12 -m venv diarizer/.venv
+fi
+diarizer/.venv/bin/pip install --upgrade pip --quiet
+diarizer/.venv/bin/pip install -e "diarizer[dev]" --quiet
+ok "diarizer/.venv ready"
+
+# ── 6. Git signing sanity check ───────────────────────────────────────────────
+step "Git signing"
+GPG_FORMAT=$(git config --get gpg.format || echo unset)
+GPG_SIGN=$(git config --get commit.gpgsign || echo unset)
+SIGNING_KEY=$(git config --get user.signingkey || echo unset)
+if [ "$GPG_SIGN" != "true" ] || [ "$SIGNING_KEY" = "unset" ]; then
+  warn "Commits are not configured for signing."
+  warn "  Set:   git config commit.gpgsign true"
+  warn "         git config gpg.format ssh"
+  warn "         git config user.signingkey ~/.ssh/<your-key>.pub"
+  warn "  Branch protection on main requires signed commits."
+else
+  ok "git signing: format=$GPG_FORMAT, key=$SIGNING_KEY"
+fi
+
+# ── Done ──────────────────────────────────────────────────────────────────────
+echo ""
+ok "Setup complete. Next:  make ci-local"
