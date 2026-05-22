@@ -1,0 +1,42 @@
+# yamllint config — strict mode.
+#
+# Per project rule `feedback_strict_thresholds`: start strict, fix code
+# violations rather than relax the rule.
+
+extends: default
+
+rules:
+  # Line length matches Prettier default of 120. 80 is too tight for nested
+  # YAML (Ansible tasks, GitHub Actions matrix jobs, etc.).
+  line-length:
+    max: 120
+    level: error
+
+  # Every YAML document in the repo starts with `---`.
+  document-start:
+    present: true
+    level: error
+
+  # Strict truthy — require `true`/`false`, reject `yes`/`no`/`on`/`off`.
+  truthy:
+    level: error
+    allowed-values: ['true', 'false']
+    check-keys: true
+
+  # 2-space indent, consistent.
+  indentation:
+    spaces: 2
+    indent-sequences: true
+    check-multi-line-strings: false
+
+  # Inline-comment spacing: Prettier reformats YAML to `value # comment`
+  # (1 space before `#`). Accept Prettier's output to keep formatters aligned.
+  comments:
+    min-spaces-from-content: 1
+    require-starting-space: true
+
+ignore: |
+  **/node_modules/**
+  **/dist/**
+  **/build/**
+  .tmp/**

@@ -1,0 +1,5 @@
+# Spectral ruleset for openapi.json. Inherits the OpenAPI spec ruleset.
+# Add project-local overrides below; do NOT disable rules without a written
+# reason — strict-mode policy is "fix the spec, not the rule".
+extends:
+  - spectral:oas

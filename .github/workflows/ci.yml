@@ -1,0 +1,93 @@
+---
+name: CI
+
+'on':
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prettier check
+        run: pnpm format:check
+
+      - name: Markdown lint
+        run: pnpm md-lint
+
+      - name: Knip (dead code)
+        run: pnpm knip
+
+      - name: JSCpd (copy-paste)
+        run: pnpm jscpd
+
+      - name: License-check
+        run: pnpm license-check
+
+      - name: pnpm audit
+        run: pnpm audit
+
+      - name: pnpm dedupe --check
+        run: pnpm dedupe --check
+
+      - name: Shellcheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        env:
+          SHELLCHECK_OPTS: -e SC2086
+
+      - name: Yamllint
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          config_file: .yamllint
+          file_or_dir: .github/ lefthook.yml
+
+      - name: Type-check (all workspaces)
+        run: pnpm type-check
+
+      - name: Lint (all workspaces, max-warnings 0)
+        run: pnpm lint
+
+      - name: Dependency-cruiser (all workspaces)
+        run: |
+          (cd shared && pnpm run depcruise)
+
+      - name: Test + coverage (100/100/100/100)
+        run: pnpm test:coverage
+        env:
+          CI: 'true'
+
+      - name: Flaky-check
+        run: pnpm flaky:check
+
+      - name: OpenAPI drift check
+        run: pnpm openapi:check
+
+      - name: OpenAPI Spectral lint
+        run: pnpm openapi:lint

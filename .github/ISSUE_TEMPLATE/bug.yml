@@ -1,0 +1,34 @@
+---
+name: Bug report
+description: Something is broken
+labels: ['bug']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is broken?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected
+      description: What should happen?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: How can someone else reproduce this?
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, runtime, app version, browser if relevant
+  - type: textarea
+    id: suggested
+    attributes:
+      label: Suggested fix
+      description: Optional. How could this be fixed?

@@ -1,0 +1,10 @@
+# Path-based ownership. Add real owners (GitHub handles or teams) as they
+# join. The defaults below ensure every change has someone reviewing.
+
+* @earshot-tools
+
+/shared/ @earshot-tools
+
+/.github/ @earshot-tools
+/docs/ @earshot-tools
+/.claude/ @earshot-tools

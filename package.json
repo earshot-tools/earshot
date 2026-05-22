@@ -1,0 +1,95 @@
+{
+  "name": "@earshot-tools/earshot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.33.0",
+  "description": "Local-only botless meeting capture, transcription, and speaker labeling for Obsidian on macOS.",
+  "license": "MIT",
+  "author": "Inoyatov Khamidulla",
+  "engines": {
+    "node": ">=24",
+    "pnpm": ">=10"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "lefthook"
+    ],
+    "overrides": {
+      "vitest": "^3.0.0",
+      "lodash": ">=4.17.21",
+      "@stryker-mutator/util": ">=8.7.1",
+      "esbuild": ">=0.25.0",
+      "micromatch": ">=4.0.8",
+      "js-yaml": ">=4.1.1",
+      "markdown-it": ">=14.1.1",
+      "yaml": ">=2.8.3",
+      "vite": ">=6.4.2",
+      "@stryker-mutator/core>ajv": ">=8.18.0",
+      "tmp": ">=0.2.4",
+      "@eslint/plugin-kit": ">=0.3.4",
+      "@vitest/coverage-v8": "^3.0.0",
+      "@vitest/runner": "^3.0.0",
+      "@vitest/utils": "^3.0.0",
+      "@vitest/expect": "^3.0.0",
+      "@vitest/snapshot": "^3.0.0",
+      "@vitest/spy": "^3.0.0",
+      "@vitest/mocker": "^3.0.0",
+      "@vitest/pretty-format": "^3.0.0"
+    }
+  },
+  "scripts": {
+    "preinstall": "npx only-allow pnpm",
+    "prepare": "lefthook install --reset-hooks-path",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "pnpm -r --stream run lint",
+    "lint:fix": "pnpm -r --stream run lint:fix",
+    "md-lint": "markdownlint-cli2",
+    "type-check": "tsc -b --pretty",
+    "type-check:clean": "tsc -b --clean",
+    "test": "pnpm -r --stream run test",
+    "test:coverage": "pnpm -r --stream run test:coverage",
+    "knip": "knip --no-progress",
+    "jscpd": "jscpd .",
+    "license-check": "license-checker --production --excludePrivatePackages --onlyAllow \"MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;CC0-1.0;Unlicense;0BSD;BlueOak-1.0.0;Python-2.0;MPL-2.0;OFL-1.1\"",
+    "audit": "pnpm audit --audit-level=moderate",
+    "dedupe:check": "pnpm dedupe --check",
+    "flaky:check": "node scripts/check-flaky.mjs",
+    "openapi": "tsx scripts/generate-openapi.mjs",
+    "openapi:check": "tsx scripts/check-openapi.mjs",
+    "openapi:lint": "spectral lint openapi.json --fail-severity=warn"
+  },
+  "lint-staged": {
+    "shared/**/*.ts": [
+      "tools/lint-staged-eslint.sh shared",
+      "prettier --write"
+    ],
+    "**/*.{ts,tsx,js,jsx,mjs,cjs,json,md,yml,yaml,css}": [
+      "prettier --write"
+    ],
+    "*": [
+      "secretlint"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "19.6.1",
+    "@commitlint/config-conventional": "19.6.0",
+    "@secretlint/secretlint-rule-preset-recommend": "11.6.0",
+    "jscpd": "4.0.9",
+    "knip": "6.3.1",
+    "lefthook": "2.1.6",
+    "license-checker": "25.0.1",
+    "lint-staged": "15.2.0",
+    "markdownlint-cli2": "0.18.1",
+    "only-allow": "1.2.2",
+    "prettier": "3.4.0",
+    "secretlint": "11.6.0",
+    "@stoplight/spectral-cli": "6.14.2",
+    "tsx": "4.19.2",
+    "typescript": "5.6.3",
+    "zod": "3.23.8",
+    "zod-to-json-schema": "3.23.5",
+    "@earshot-tools/earshot-shared": "workspace:*"
+  }
+}

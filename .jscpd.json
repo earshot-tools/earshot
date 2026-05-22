@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/kucherenko/jscpd/master/schema.json",
+  "threshold": 0.5,
+  "reporters": ["console"],
+  "absolute": true,
+  "gitignore": true,
+  "format": ["typescript", "javascript", "tsx", "jsx"],
+  "ignore": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/coverage/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.test.js",
+    "**/*.spec.ts",
+    "**/*.stories.tsx",
+    "**/migrations/**",
+    "**/drizzle/**",
+    "**/*.config.{ts,js,cjs,mjs}",
+    "**/.storybook/**",
+    "**/main.tsx",
+    "**/src/test/setup.ts",
+    "**/.dependency-cruiser.cjs",
+    "**/.size-limit.cjs"
+  ],
+  "minLines": 5,
+  "minTokens": 50
+}

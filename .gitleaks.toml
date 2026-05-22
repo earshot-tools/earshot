@@ -1,0 +1,35 @@
+# Gitleaks configuration.
+# Scans staged files for secrets before commit.
+# Docs: https://github.com/gitleaks/gitleaks#configuration
+
+title = "earshot gitleaks config"
+
+# Extend the default ruleset (AWS, GitHub, Slack, Google, generic API keys, etc.)
+# Custom rules intentionally not added — the default ruleset covers 160+ provider
+# patterns and generic high-entropy detection. Add project-specific rules only
+# when a real secret type is missed by the defaults.
+[extend]
+useDefault = true
+
+# ── Allowlist (global) ───────────────────────────────────────
+# Paths and patterns that are known-safe (false positives).
+
+[allowlist]
+description = "Global allowlist for known-safe patterns"
+paths = [
+  # .env.example files contain placeholder values, not real secrets
+  '''\.env\.example$''',
+  # Docs may contain example tokens in conventions/guides
+  '''docs/conventions/.*\.md$''',
+  '''docs/guides/.*\.md$''',
+  '''docs/runbooks/.*\.md$''',
+  # Decision log contains quoted error messages and example commands
+  '''docs/decisions/.*\.md$''',
+  # Research docs contain competitive analysis with sample data
+  '''docs/engineering-research/.*\.md$''',
+  # Lock files contain package hashes, not secrets
+  '''package-lock\.json$''',
+  '''pnpm-lock\.yaml$''',
+  # Gitleaks config itself (has regex patterns that look like secrets)
+  '''\.gitleaks\.toml$''',
+]

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreExportsUsedInFile": true,
+  "ignore": [],
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/*.{js,mjs}"],
+      "project": ["scripts/**/*.{js,mjs}"],
+      "ignoreBinaries": ["storybook", "playwright", "tools/lint-staged-eslint.sh"],
+      "ignoreDependencies": ["@secretlint/secretlint-rule-preset-recommend"]
+    },
+    "shared": {}
+  }
+}

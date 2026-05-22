@@ -1,0 +1,33 @@
+# Dependencies
+node_modules
+**/node_modules
+
+# Build output
+dist
+**/dist
+build
+**/build
+coverage
+**/coverage
+
+# Lockfiles
+package-lock.json
+**/package-lock.json
+yarn.lock
+**/yarn.lock
+pnpm-lock.yaml
+**/pnpm-lock.yaml
+
+# Auto-generated
+**/CHANGELOG.md
+*.min.js
+*.min.css
+openapi.json
+
+# Playwright
+**/test-results
+**/playwright-report
+**/.playwright
+
+# Drizzle generated
+**/drizzle

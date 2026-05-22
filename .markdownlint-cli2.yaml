@@ -1,0 +1,43 @@
+# markdownlint-cli2 config — strict mode.
+#
+# No rule disables. The default ruleset is strict on purpose. If the operator
+# needs to relax a rule, they add the override here with a written reason.
+# This matches the project rule `feedback_strict_thresholds`: start strictest,
+# fix violations instead of relaxing rules.
+
+globs:
+  - '**/*.md'
+
+config:
+  default: true
+  # MD013 (line-length): disabled. Tables, frontmatter, code blocks, and links
+  # all make hard line limits noise rather than signal. Prettier handles
+  # consistent formatting; this rule is the canonical false-positive.
+  MD013: false
+  # Allow duplicate headings — they're common in long structured docs.
+  MD024:
+    siblings_only: true
+  # Allow inline HTML — SKILL.md frontmatter uses XML-like tags for AI prompts.
+  MD033: false
+  # PR / issue templates start with `## Linked issue`, not `# Title` (GitHub
+  # merges them into a top-level title from the PR/issue title field).
+  MD041: false
+  # Allow up to 2 consecutive blanks — EJS-rendered conditionals occasionally
+  # emit an extra newline; visual noise only.
+  MD012:
+    maximum: 2
+
+ignores:
+  - 'node_modules'
+  - '**/node_modules'
+  - 'dist'
+  - '**/dist'
+  - 'build'
+  - '**/build'
+  - 'coverage'
+  - '**/coverage'
+  - '.tmp'
+  - '**/.tmp'
+  - 'CHANGELOG.md'
+  - '**/CHANGELOG.md'
+  - '.claude/worktrees/**'

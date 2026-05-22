@@ -1,0 +1,96 @@
+---
+# Lefthook config — strict-mode local quality gates.
+#
+# Pre-commit (sequential): gitleaks → lint-staged.
+# Commit-msg: commitlint.
+# Pre-push (parallel): every quality gate.
+# Strict-mode rules: gitleaks is hard-required, lint runs with `--max-warnings 0`,
+# coverage threshold is 100/100/100/100.
+
+skip_output:
+  - meta
+  - execution_info
+  - execution_out
+
+pre-commit:
+  piped: true
+  commands:
+    01-bot-identity:
+      run: |
+        if echo "$(pwd)" | grep -q "/.claude/worktrees/"; then
+          COMMITTER_NAME=$(git config user.name 2>/dev/null || echo "")
+          if [ "$COMMITTER_NAME" != "stivoo-bot" ]; then
+            echo "ERROR: Worktree commits must use the stivoo-bot identity."
+            echo "       Current user.name: '$COMMITTER_NAME'"
+            echo "       Run: git config --worktree user.name 'stivoo-bot'"
+            exit 1
+          fi
+        fi
+    02-gitleaks:
+      run: |
+        if ! command -v gitleaks >/dev/null 2>&1; then
+          echo "ERROR: gitleaks not installed. Install with: brew install gitleaks"
+          echo "       Strict mode requires gitleaks. No soft skip."
+          exit 1
+        fi
+        gitleaks protect --staged --redact --verbose --config .gitleaks.toml
+    03-lint-staged:
+      run: pnpm exec lint-staged
+
+commit-msg:
+  commands:
+    commitlint:
+      run: pnpm exec commitlint --edit {1}
+
+pre-push:
+  jobs:
+    - name: parallel-checks
+      group:
+        parallel: true
+        jobs:
+          - name: prettier
+            run: pnpm exec prettier --check "**/*.{ts,tsx,js,jsx,json,md,yml,yaml}"
+          - name: md-lint
+            run: pnpm exec markdownlint-cli2
+          - name: knip
+            run: pnpm exec knip --no-progress
+          - name: jscpd
+            run: pnpm exec jscpd .
+          - name: license-check
+            run: make license-check
+          - name: audit
+            run: pnpm audit --audit-level=moderate
+          - name: dedupe-check
+            run: pnpm dedupe --check
+          - name: test-shell
+            run: |
+              if ! command -v shellcheck >/dev/null 2>&1; then
+                echo "ERROR: shellcheck not installed. Install with: brew install shellcheck"
+                exit 1
+              fi
+              files=$(find tools scripts bin -maxdepth 2 -type f -name "*.sh" 2>/dev/null)
+              if [ -z "$files" ]; then echo "test-shell: no shell scripts found"; exit 0; fi
+              echo "Checking: $files"
+              shellcheck $files
+          - name: yamllint
+            run: |
+              if ! command -v yamllint >/dev/null 2>&1; then
+                echo "ERROR: yamllint not installed. Install with: brew install yamllint"
+                exit 1
+              fi
+              yamllint -c .yamllint .github/ lefthook.yml
+          - name: type-check
+            run: pnpm type-check
+          - name: shared-lint
+            run: cd shared && pnpm run lint
+          - name: shared-depcruise
+            run: cd shared && pnpm run depcruise
+          - name: shared-test-coverage
+            run: cd shared && CI=true pnpm run test:coverage
+          - name: openapi-check
+            run: pnpm openapi:check
+          - name: openapi-lint
+            run: pnpm openapi:lint
+
+    - name: flaky-check
+      run: node scripts/check-flaky.mjs
