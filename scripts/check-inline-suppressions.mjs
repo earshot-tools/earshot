@@ -63,25 +63,41 @@ if (!base) {
 }
 
 const lastMsg = sh('git log -1 --format=%B').trim()
-if (/\[allow-suppression\]/i.test(lastMsg)) {
+// Bypass via a Conventional-Commits-style trailer on its own line:
+//   Allow-Suppression: <reason>
+// Bracketed/inline mentions in prose or code fences do NOT trigger the bypass.
+if (/^Allow-Suppression:\s*\S+/m.test(lastMsg)) {
   console.log(
-    'check-inline-suppressions: latest commit carries [allow-suppression] tag; gate bypassed.',
+    'check-inline-suppressions: latest commit carries Allow-Suppression trailer; gate bypassed.',
   )
   process.exit(0)
 }
 
 const diff = sh(`git diff --unified=0 ${base}...HEAD`)
 
+// Only scan source-code paths where real disable directives live.
+// Docs, configs, Makefiles legitimately mention these tokens as text.
+const PATH_INCLUDES = /\.(ts|tsx|js|mjs|cjs|jsx|swift|py)$/
+// Always-exclude even within source extensions (the gate's own implementation).
+const PATH_EXCLUDES = [/^scripts\/check-inline-suppressions\.mjs$/]
+
 let currentFile = null
 const findings = []
 for (const line of diff.split('\n')) {
+  // Reset on every git diff header so binary / rename hunks don't bleed.
+  if (line.startsWith('diff --git')) {
+    currentFile = null
+    continue
+  }
   if (line.startsWith('+++ b/')) {
     currentFile = line.slice(6)
     continue
   }
-  if (line.startsWith('--- ') || line.startsWith('diff --git')) continue
+  if (line.startsWith('--- ')) continue
   if (!line.startsWith('+') || line.startsWith('+++')) continue
   if (!currentFile) continue
+  if (!PATH_INCLUDES.test(currentFile)) continue
+  if (PATH_EXCLUDES.some((rx) => rx.test(currentFile))) continue
   const added = line.slice(1)
   for (const { name, regex } of PATTERNS) {
     if (regex.test(added)) {
@@ -99,7 +115,9 @@ if (findings.length === 0) {
 console.error(
   `check-inline-suppressions: found ${findings.length} new inline suppression(s) since ${base}.`,
 )
-console.error('Each requires a reviewer ack. To bypass, add [allow-suppression] to the commit msg.')
+console.error(
+  'Each requires a reviewer ack. To bypass, add an `Allow-Suppression: <reason>` trailer line to the commit msg.',
+)
 console.error('')
 const byFile = new Map()
 for (const f of findings) {
