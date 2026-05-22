@@ -16,7 +16,7 @@ install: ## Install all workspace deps + lefthook hooks.
 	pnpm install
 
 # ─── Quality gates ────────────────────────────────────────────────────
-.PHONY: format format-check lint lint-fix type-check test test-coverage knip jscpd md-lint license-check audit dedupe-check size-limit test-shell yamllint flaky-check ci-local
+.PHONY: format format-check lint lint-fix type-check test test-coverage knip jscpd md-lint license-check audit dedupe-check size-limit stylelint stylelint-fix stryker inline-suppressions branch-name-check test-shell yamllint flaky-check ci-local
 format: ## Run Prettier in write mode.
 	pnpm format
 
@@ -69,7 +69,33 @@ yamllint: ## yamllint on .github + lefthook.yml.
 flaky-check: ## Fail if any vitest run had retries (post-test).
 	pnpm flaky:check
 
-ci-local: format-check lint md-lint knip jscpd license-check audit dedupe-check test-shell yamllint type-check test-coverage flaky-check py-quality ## Mirror of CI gates locally (py-quality requires `make py-install` first).
+size-limit: ## Build production main.js and enforce the 250KB gzipped budget.
+	pnpm run size
+
+stylelint: ## Lint CSS with stylelint (no exclusions beyond build artifacts).
+	pnpm run stylelint
+
+stylelint-fix: ## Apply stylelint --fix to all CSS.
+	pnpm run stylelint:fix
+
+stryker: ## Mutation testing across plugin/ + shared/ workspaces (slow; opt-in via label).
+	pnpm run stryker
+
+inline-suppressions: ## Reject new eslint-disable / @ts-expect-error / # noqa lines without reviewer bypass.
+	node scripts/check-inline-suppressions.mjs
+
+branch-name-check: ## Enforce phase/<n>-... or <area>/feature|fix/... branch naming.
+	@BR="$${GITHUB_HEAD_REF:-$$(git symbolic-ref --short HEAD 2>/dev/null || echo HEAD)}"; \
+	  case "$$BR" in \
+	    main|master|HEAD) echo "branch-name-check: on '$$BR' (allowed / detached)"; exit 0;; \
+	    phase/*) echo "OK: $$BR (phase branch)"; exit 0;; \
+	    plugin/*|shared/*|native/*|diarizer/*|devops/*|docs/*|deps/*) echo "OK: $$BR (scoped branch)"; exit 0;; \
+	  esac; \
+	  echo "ERROR: branch '$$BR' must match phase/<N>-<slug> OR <area>/feature|fix/<issue>-<slug>"; \
+	  echo "       allowed area prefixes: plugin shared native diarizer devops docs deps"; \
+	  exit 1
+
+ci-local: format-check lint md-lint knip jscpd license-check audit dedupe-check test-shell yamllint type-check test-coverage flaky-check py-quality size-limit stylelint inline-suppressions branch-name-check ## Mirror of CI gates locally (py-quality requires `make py-install` first).
 
 # ─── Swift gates (macOS only — Swift toolchain not available on ubuntu CI runner) ───
 .PHONY: swift-build swift-test swift-format-check swift-format swift-lint swift-analyze swift-quality
