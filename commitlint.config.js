@@ -19,7 +19,7 @@ export default {
       ],
     ],
 
-    'scope-enum': [1, 'always', ['shared', 'devops', 'docs']],
+    'scope-enum': [1, 'always', ['plugin', 'shared', 'devops', 'docs']],
 
     'subject-max-length': [2, 'always', 72],
     'subject-case': [2, 'always', 'lower-case'],

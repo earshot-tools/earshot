@@ -1,4 +1,4 @@
 {
   "files": [],
-  "references": [{ "path": "./shared" }]
+  "references": [{ "path": "./plugin" }, { "path": "./shared" }]
 }

@@ -41,6 +41,8 @@
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "prepare": "lefthook install --reset-hooks-path",
+    "build": "node esbuild.config.mjs production",
+    "dev": "node esbuild.config.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "pnpm -r --stream run lint",
@@ -61,6 +63,10 @@
     "openapi:lint": "spectral lint openapi.json --fail-severity=warn"
   },
   "lint-staged": {
+    "plugin/**/*.ts": [
+      "tools/lint-staged-eslint.sh plugin",
+      "prettier --write"
+    ],
     "shared/**/*.ts": [
       "tools/lint-staged-eslint.sh shared",
       "prettier --write"
@@ -75,7 +81,11 @@
   "devDependencies": {
     "@commitlint/cli": "19.6.1",
     "@commitlint/config-conventional": "19.6.0",
+    "@earshot-tools/earshot-plugin": "workspace:*",
+    "@earshot-tools/earshot-shared": "workspace:*",
     "@secretlint/secretlint-rule-preset-recommend": "11.6.0",
+    "@stoplight/spectral-cli": "6.14.2",
+    "esbuild": "0.28.0",
     "jscpd": "4.0.9",
     "knip": "6.3.1",
     "lefthook": "2.1.6",
@@ -85,11 +95,9 @@
     "only-allow": "1.2.2",
     "prettier": "3.4.0",
     "secretlint": "11.6.0",
-    "@stoplight/spectral-cli": "6.14.2",
     "tsx": "4.19.2",
     "typescript": "5.6.3",
     "zod": "3.23.8",
-    "zod-to-json-schema": "3.23.5",
-    "@earshot-tools/earshot-shared": "workspace:*"
+    "zod-to-json-schema": "3.23.5"
   }
 }

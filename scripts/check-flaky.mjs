@@ -25,7 +25,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const REPO_ROOT = path.resolve(__dirname, '..')
 
-const WORKSPACES = ['shared']
+const WORKSPACES = ['plugin', 'shared']
 const REPORTS_DIR = 'reports'
 const REPORT_PREFIX = 'flaky-report'
 const REPORT_SUFFIX = '.json'

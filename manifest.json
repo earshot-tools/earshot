@@ -1,0 +1,10 @@
+{
+  "id": "earshot",
+  "name": "Earshot",
+  "version": "0.1.0",
+  "minAppVersion": "1.5.0",
+  "description": "Local-only botless meeting capture, transcription, and speaker labeling for macOS.",
+  "author": "Inoyatov Khamidulla",
+  "authorUrl": "https://github.com/earshot-tools",
+  "isDesktopOnly": true
+}
