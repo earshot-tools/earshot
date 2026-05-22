@@ -147,6 +147,22 @@ describe('robustness', () => {
     }).not.toThrow()
     expect(sink.info).toHaveBeenCalledWith('[earshot] [INFO] boom [unserializable context]')
   })
+
+  it('swallows sink failures so logging never raises to the caller', () => {
+    const sink: SinkSpy = {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(() => {
+        throw new Error('sink exploded')
+      }),
+    }
+    const logger = createLogger({ level: 'debug', sink })
+    expect(() => {
+      logger.error('msg')
+    }).not.toThrow()
+    expect(sink.error).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe('default sink', () => {

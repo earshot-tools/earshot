@@ -83,7 +83,11 @@ function emit(sink: Sink, threshold: number, args: EmitArgs): void {
     return
   }
   const formatted = format(args)
-  sink[args.level](formatted)
+  try {
+    sink[args.level](formatted)
+  } catch {
+    // The no-throw contract requires us to swallow sink failures rather than propagate them; logging is a no-op when its own output channel is broken.
+  }
 }
 
 function format(args: EmitArgs): string {
