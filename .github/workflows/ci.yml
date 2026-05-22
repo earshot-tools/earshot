@@ -47,3 +47,22 @@ jobs:
 
       - name: make ci-local
         run: make ci-local
+
+  swift-quality:
+    name: Swift quality gates
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Swift toolchain helpers
+        run: |
+          brew install swiftlint swift-format periphery
+          swift --version
+          swiftlint version
+          swift-format --version
+          periphery version
+
+      - name: make swift-quality
+        run: make swift-quality

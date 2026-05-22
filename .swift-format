@@ -16,7 +16,7 @@
   "fileScopedDeclarationPrivacy": { "accessLevel": "private" },
   "noAssignmentInExpressions": { "allowedFunctions": ["XCTAssertNoThrow"] },
   "multiElementCollectionTrailingCommas": true,
-  "reflowMultilineStringLiterals": "onlyLinesOverLength",
+  "reflowMultilineStringLiterals": { "onlyLinesOverLength": {} },
   "rules": {
     "AllPublicDeclarationsHaveDocumentation": true,
     "AlwaysUseLiteralForEmptyCollectionInit": true,

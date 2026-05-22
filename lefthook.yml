@@ -97,6 +97,46 @@ pre-push:
             run: pnpm openapi:check
           - name: openapi-lint
             run: pnpm openapi:lint
+          - name: swift-build
+            tags: macos
+            skip:
+              - run: '[ "$(uname)" != "Darwin" ]'
+            run: |
+              if ! command -v swift >/dev/null 2>&1; then
+                echo "swift not installed; skipping swift-build"
+                exit 0
+              fi
+              make swift-build
+          - name: swift-test
+            tags: macos
+            skip:
+              - run: '[ "$(uname)" != "Darwin" ]'
+            run: |
+              if ! command -v swift >/dev/null 2>&1; then
+                echo "swift not installed; skipping swift-test"
+                exit 0
+              fi
+              make swift-test
+          - name: swift-format-check
+            tags: macos
+            skip:
+              - run: '[ "$(uname)" != "Darwin" ]'
+            run: |
+              if ! command -v swift-format >/dev/null 2>&1; then
+                echo "swift-format not installed; skipping swift-format-check"
+                exit 0
+              fi
+              make swift-format-check
+          - name: swift-lint
+            tags: macos
+            skip:
+              - run: '[ "$(uname)" != "Darwin" ]'
+            run: |
+              if ! command -v swiftlint >/dev/null 2>&1; then
+                echo "swiftlint not installed; skipping swift-lint"
+                exit 0
+              fi
+              make swift-lint
 
     - name: flaky-check
       run: node scripts/check-flaky.mjs
