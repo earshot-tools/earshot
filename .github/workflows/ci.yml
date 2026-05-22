@@ -18,6 +18,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # Check out the PR head SHA (not the merge ref) so HEAD~1 is the
+          # previous commit on the branch — matches local per-commit gate
+          # semantics for `check-inline-suppressions`. Falls back to the
+          # ref for push events on main.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - uses: pnpm/action-setup@v4
         with:
@@ -66,6 +71,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Install Swift toolchain helpers
         run: |
