@@ -81,6 +81,12 @@ pre-push:
               yamllint -c .yamllint .github/ lefthook.yml
           - name: type-check
             run: pnpm type-check
+          - name: plugin-lint
+            run: cd plugin && pnpm run lint
+          - name: plugin-depcruise
+            run: cd plugin && pnpm run depcruise
+          - name: plugin-test-coverage
+            run: cd plugin && CI=true pnpm run test:coverage
           - name: shared-lint
             run: cd shared && pnpm run lint
           - name: shared-depcruise
