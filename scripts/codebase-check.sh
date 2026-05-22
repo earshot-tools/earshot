@@ -67,7 +67,11 @@ prod_grep() {
   local files
   files=$(prod_files)
   if [ -z "$files" ]; then return 0; fi
-  echo "$files" | xargs grep -nE "$pattern" "$@" 2>/dev/null || true
+  # -H forces filename in output even when grep receives a single file
+  # via xargs (default behaviour drops the filename in that case, which
+  # silently breaks every per-path exclusion in this script — caught by
+  # scripts/__tests__/codebase-check.bats).
+  echo "$files" | xargs grep -HnE "$pattern" "$@" 2>/dev/null || true
 }
 
 PROD_COUNT=$(prod_files | wc -l | tr -d ' ')

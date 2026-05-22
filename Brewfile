@@ -25,6 +25,12 @@ brew "gitleaks"
 brew "shellcheck"
 brew "yamllint"
 
+# Shell-test framework for the gate scripts (scripts/__tests__/*.bats).
+# Without these tests, gate-script bugs ship silently — every fix to
+# pr-checks.sh / codebase-check.sh / check-inline-suppressions.mjs in
+# Phase 0 was caught by hand-testing, never by a test.
+brew "bats-core"
+
 # Local STT runtime (Phase 3 will exercise this).
 brew "ollama"
 
