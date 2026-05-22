@@ -61,6 +61,7 @@ added_lines() {
 # self-match when they reference the banned tokens as patterns.
 GATE_SCRIPTS_EXCLUDE='(^|/)(scripts/(codebase-check|pr-checks|check-inline-suppressions)\.(sh|mjs))$'
 
+# shellcheck disable=SC2120  # optional second arg used only by tests
 added_in_files() {
   local pattern="$1"
   local exclude="${2:-$GATE_SCRIPTS_EXCLUDE}"
@@ -76,6 +77,7 @@ added_in_files() {
   '
 }
 
+# shellcheck disable=SC2120  # optional arg used only by tests
 added_prod() {
   # Added lines from production files only. File-aware via `diff --git`
   # markers. Skips test/spec/fixture files AND the gate-defining scripts
