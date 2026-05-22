@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0](https://github.com/earshot-tools/earshot/compare/v1.1.0...v1.2.0) (2026-05-22)
+
+
+### Features
+
+* **plugin:** wire main.ts plugin lifecycle + start/stop commands ([#11](https://github.com/earshot-tools/earshot/issues/11)) ([ff44ebb](https://github.com/earshot-tools/earshot/commit/ff44ebb8e36623fb6e3d5c63fe9ed4b8cfce32d5)), closes [#4](https://github.com/earshot-tools/earshot/issues/4)
+
+
+### Bug Fixes
+
+* **devops:** close devops-branch loophole + require owner approval everywhere ([#9](https://github.com/earshot-tools/earshot/issues/9)) ([cb9bda8](https://github.com/earshot-tools/earshot/commit/cb9bda8c1e5dec9bdfedfa4f36e9f58b5adc4f3a))
+
 ## [1.1.0](https://github.com/earshot-tools/earshot/compare/v1.0.0...v1.1.0) (2026-05-22)
 
 
