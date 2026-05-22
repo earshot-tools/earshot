@@ -177,6 +177,34 @@ else
   row "C4" "eval / dangerouslySetInnerHTML / new Function" "PASS" "0 hits"
 fi
 
+# S9: type assertions (`as X`) — REVIEW. ESLint catches many of these via
+# `consistent-type-assertions` but the row exists so a human eye can confirm
+# any new `as` cast is over external/untrusted data and not over a typed
+# domain value.
+hits=$(prod_grep " as " | grep -v "as const" | grep -v "import type" || true)
+count=$(count_lines "$hits")
+if [ "$count" -gt 0 ]; then
+  row "S9" "type assertions (as X) — verify external data" "REVIEW" \
+    "${count} hits — manual check needed"
+else
+  row "S9" "type assertions (as X) — verify external data" "PASS" "0 hits"
+fi
+
+# C7: Zod `.parse()` instead of `.safeParse()` — REVIEW. `.parse()` throws on
+# validation failure; `.safeParse()` returns a discriminated result. Earshot's
+# Zod schemas in shared/src/schemas/ should consistently use safeParse so the
+# caller decides how to react. Note: matches all `.parse(` to avoid Zod-only
+# detection; reviewer filters out JSON.parse / parseInt / etc.
+hits=$(prod_grep "\.parse\(" \
+  | grep -v "safeParse\|JSON\.parse\|parseInt\|parseFloat\|url\.parse\|path\.parse\|Date\.parse\|\.test\." || true)
+count=$(count_lines "$hits")
+if [ "$count" -gt 0 ]; then
+  row "C7" "Zod .parse() instead of .safeParse()" "REVIEW" \
+    "${count} hits — verify not Zod"
+else
+  row "C7" "Zod .parse() instead of .safeParse()" "PASS" "0 hits"
+fi
+
 # C8: hardcoded secrets / api keys / passwords.
 hits=$(prod_grep "secret.*=.*['\"][A-Za-z0-9_-]{8,}|password.*=.*['\"][A-Za-z0-9_-]{8,}|apiKey.*=.*['\"][A-Za-z0-9_-]{8,}|api_key.*=.*['\"][A-Za-z0-9_-]{8,}" \
   | grep -v "config\.\|process\.env\|// \|test\|example\|placeholder\|\.d\.ts" || true)

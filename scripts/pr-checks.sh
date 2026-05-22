@@ -55,16 +55,20 @@ added_lines() {
   get_diff | grep "^+" | grep -v "^+++" || true
 }
 
-# Added lines restricted to files matching a regex on the path.
-# Avoids false positives where lint configs define patterns that *describe*
-# the things we want to ban.
+# Added lines restricted to files matching a regex on the path. Optional
+# second arg is an exclusion regex — defaults to the gate-defining scripts
+# (codebase-check, pr-checks, check-inline-suppressions) so they don't
+# self-match when they reference the banned tokens as patterns.
+GATE_SCRIPTS_EXCLUDE='(^|/)(scripts/(codebase-check|pr-checks|check-inline-suppressions)\.(sh|mjs))$'
+
 added_in_files() {
   local pattern="$1"
-  get_diff | awk -v pattern="$pattern" '
+  local exclude="${2:-$GATE_SCRIPTS_EXCLUDE}"
+  get_diff | awk -v pattern="$pattern" -v exclude="$exclude" '
     /^diff --git / {
       n = split($0, parts, " b/")
       file = parts[n]
-      keep = (file ~ pattern)
+      keep = (file ~ pattern) && !(file ~ exclude)
       next
     }
     /^\+\+\+/ { next }
@@ -73,19 +77,22 @@ added_in_files() {
 }
 
 added_prod() {
-  # Added lines from production files only. File-aware via `diff --git` markers.
-  # Skips lines whose owning file matches test/spec/fixture patterns.
-  get_diff | awk '
+  # Added lines from production files only. File-aware via `diff --git`
+  # markers. Skips test/spec/fixture files AND the gate-defining scripts
+  # themselves (they reference banned tokens as patterns).
+  local exclude="${1:-$GATE_SCRIPTS_EXCLUDE}"
+  get_diff | awk -v exclude="$exclude" '
     /^diff --git / {
       n = split($0, parts, " b/")
       file = parts[n]
       is_test = (file ~ /\.test\./) || (file ~ /\.spec\./) ||
                 (file ~ /test-factory\./) || (file ~ /test-helpers\./) ||
                 (file ~ /\/__tests__\//) || (file ~ /\/fixtures\//)
+      is_gate = (file ~ exclude)
       next
     }
     /^\+\+\+/ { next }
-    /^\+/ && !is_test { print }
+    /^\+/ && !is_test && !is_gate { print }
   '
 }
 
@@ -108,6 +115,49 @@ echo "## PR Checks — ${PR}"
 echo ""
 echo "| #    | Check                                         | Verdict | Evidence |"
 echo "|------|-----------------------------------------------|---------|----------|"
+
+# A5: PR body accuracy — REVIEW row (cannot be automated). asal-world ships
+# this as a checklist row reviewers tick off; we mirror it.
+if [ "$PR" = "local" ]; then
+  row "A5" "PR body accuracy" "PASS" "no PR (local run)"
+else
+  row "A5" "PR body accuracy" "REVIEW" "manual check required"
+fi
+
+# A11: HANDOFF v1 block on code PRs (E-006). Skipped on docs/devops/deps
+# branches, where the protocol is unnecessary.
+if [ "$PR" = "local" ]; then
+  row "A11" "HANDOFF v1 block (E-006)" "PASS" "no PR (local run)"
+else
+  pr_body=$(gh pr view "$PR" --json body --jq '.body' 2>/dev/null || echo "")
+  branch=$(gh pr view "$PR" --json headRefName --jq '.headRefName' 2>/dev/null || echo "")
+  if [[ "$branch" =~ ^(docs|devops|deps|dependabot)/ ]]; then
+    row "A11" "HANDOFF v1 block (E-006)" "PASS" "not required for $branch"
+  elif echo "$pr_body" | grep -q '<!-- HANDOFF v1'; then
+    row "A11" "HANDOFF v1 block (E-006)" "PASS" "HANDOFF v1 present"
+  else
+    row "A11" "HANDOFF v1 block (E-006)" "FAIL" "HANDOFF v1 missing — code PRs require it"
+  fi
+fi
+
+# A12: REVIEW-STATE v1 block in any review or comment.
+if [ "$PR" = "local" ]; then
+  row "A12" "REVIEW-STATE v1 block (E-006)" "PASS" "no PR (local run)"
+else
+  branch=$(gh pr view "$PR" --json headRefName --jq '.headRefName' 2>/dev/null || echo "")
+  if [[ "$branch" =~ ^(docs|devops|deps|dependabot)/ ]]; then
+    row "A12" "REVIEW-STATE v1 block (E-006)" "PASS" "not required for $branch"
+  else
+    review_bodies=$(gh pr view "$PR" --json reviews --jq '.reviews[].body // empty' 2>/dev/null || echo "")
+    comment_bodies=$(gh pr view "$PR" --json comments --jq '.comments[].body // empty' 2>/dev/null || echo "")
+    if echo "$review_bodies" "$comment_bodies" | grep -q 'REVIEW-STATE v1'; then
+      row "A12" "REVIEW-STATE v1 block (E-006)" "PASS" "REVIEW-STATE v1 found"
+    else
+      row "A12" "REVIEW-STATE v1 block (E-006)" "REVIEW" \
+        "REVIEW-STATE v1 not yet posted — required before merge"
+    fi
+  fi
+fi
 
 # A1: TODO/FIXME without issue number — scoped to code files only. Lint
 # configs (`.swiftlint.yml`, `eslint.config.js`, `ruff.toml`, etc.)
