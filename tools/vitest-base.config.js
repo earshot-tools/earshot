@@ -58,6 +58,13 @@ export const DEFAULT_THRESHOLDS = {
   statements: 90,
 }
 
+export const HOOKS_THRESHOLDS = {
+  lines: 95,
+  branches: 90,
+  functions: 95,
+  statements: 95,
+}
+
 /**
  * Build a Vitest config object for a workspace.
  *
@@ -115,6 +122,7 @@ export function createVitestConfig({
         exclude: COVERAGE_EXCLUDE,
         thresholds: {
           'src/utils/**': UTILS_THRESHOLDS,
+          'src/hooks/**': HOOKS_THRESHOLDS,
           ...extraThresholds,
           '*': DEFAULT_THRESHOLDS,
         },

@@ -16,7 +16,7 @@ install: ## Install all workspace deps + lefthook hooks.
 	pnpm install
 
 # ─── Quality gates ────────────────────────────────────────────────────
-.PHONY: format format-check lint lint-fix type-check test test-coverage knip jscpd md-lint license-check audit dedupe-check size-limit stylelint stylelint-fix stryker stryker-plugin stryker-shared inline-suppressions branch-name-check gitleaks secretlint depcruise openapi-check openapi-lint test-shell yamllint flaky-check codebase-check pr-checks ai-doc-routing skill-content-check skill-content-update test-bats ci-local
+.PHONY: format format-check lint lint-fix type-check test test-coverage knip knip-fix jscpd md-lint md-fix license-check audit dedupe-check size-limit check-sourcemaps stylelint stylelint-fix stryker stryker-plugin stryker-shared mutation-baseline inline-suppressions branch-name-check gitleaks secretlint depcruise openapi-check openapi-lint test-shell yamllint flaky-check codebase-check pr-checks ai-doc-routing skill-content-check skill-content-update test-bats ci-local pre-commit pre-push
 format: ## Run Prettier in write mode.
 	pnpm format
 
@@ -41,11 +41,17 @@ test-coverage: ## Run tests with coverage (100/100/100/100 threshold).
 knip: ## Detect unused exports / files / deps.
 	pnpm knip
 
+knip-fix: ## Auto-remove unused exports where safe.
+	pnpm exec knip --fix
+
 jscpd: ## Detect copy-pasted code.
 	pnpm jscpd
 
 md-lint: ## Lint all Markdown.
 	pnpm md-lint
+
+md-fix: ## Auto-fix markdown lint issues where possible.
+	pnpm exec markdownlint-cli2 --fix
 
 license-check: ## License allowlist gate.
 	pnpm license-check
@@ -76,6 +82,18 @@ flaky-check: ## Fail if any vitest run had retries (post-test).
 size-limit: ## Build production main.js and enforce the 250KB gzipped budget.
 	pnpm run size
 
+check-sourcemaps: ## Verify no .map files alongside the published Obsidian bundle (main.js).
+	@echo "Checking for sourcemaps in publishable artifacts..."
+	@# Scope: only what install_to_vault.sh ships to <vault>/.obsidian/plugins/earshot/.
+	@# Workspace tsc-incremental dirs (plugin/dist, shared/dist) are gitignored
+	@# build cache, never reach Obsidian — scanning them is theater.
+	@if [ -f main.js.map ]; then \
+	  echo "ERROR: main.js.map found alongside the published bundle — would leak code."; \
+	  echo "Fix: ensure esbuild.config.mjs sets sourcemap:false for the production build."; \
+	  exit 1; \
+	fi
+	@echo "No sourcemaps found in publishable artifacts."
+
 stylelint: ## Lint CSS with stylelint (no exclusions beyond build artifacts).
 	pnpm run stylelint
 
@@ -89,6 +107,10 @@ stryker-plugin: ## Mutation testing on plugin/ (currently scoring 100%).
 
 stryker-shared: ## Mutation testing on shared/ (scaffolded tests; expected to score low — see ADR E-004).
 	cd shared && pnpm exec stryker run
+
+mutation-baseline: ## Run Stryker without break threshold (first-run baselines).
+	cd plugin && pnpm exec stryker run --thresholds.break 0
+	cd shared && pnpm exec stryker run --thresholds.break 0
 
 inline-suppressions: ## Reject new eslint-disable / @ts-expect-error / # noqa lines without reviewer bypass.
 	node scripts/check-inline-suppressions.mjs
@@ -142,6 +164,14 @@ branch-name-check: ## Enforce phase/<n>-... or <area>/feature|fix/... branch nam
 	  exit 1
 
 ci-local: format-check lint md-lint knip jscpd license-check audit dedupe-check test-shell yamllint type-check test-coverage flaky-check py-quality size-limit stylelint gitleaks secretlint depcruise openapi-check openapi-lint inline-suppressions branch-name-check codebase-check ai-doc-routing skill-content-check test-bats ## Mirror of CI gates locally (py-quality requires `make py-install` first; gitleaks requires brew install gitleaks).
+
+# Alternative entry points to the lefthook-managed git hooks. Same gate
+# coverage as ci-local but executed via lefthook's parallel runner.
+pre-commit: ## Run the lefthook pre-commit hook manually.
+	lefthook run pre-commit
+
+pre-push: ## Run the lefthook pre-push hook manually (parallel runner; same gates as ci-local).
+	lefthook run pre-push
 
 # ─── Swift gates (macOS only — Swift toolchain not available on ubuntu CI runner) ───
 .PHONY: swift-build swift-test swift-format-check swift-format swift-lint swift-analyze swift-quality

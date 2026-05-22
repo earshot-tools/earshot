@@ -4,9 +4,15 @@
   "ignore": [],
   "workspaces": {
     ".": {
-      "entry": ["scripts/*.{js,mjs}"],
-      "project": ["scripts/**/*.{js,mjs}"],
-      "ignoreBinaries": ["storybook", "playwright", "stryker", "tools/lint-staged-eslint.sh"],
+      "entry": [
+        "scripts/*.{js,mjs}",
+        "tools/eslint-workspace.config.js",
+        "tools/eslint-base.config.js",
+        "tools/vitest-base.config.js",
+        "tools/dependency-cruiser-base.cjs"
+      ],
+      "project": ["scripts/**/*.{js,mjs}", "tools/**/*.{js,cjs,mjs}"],
+      "ignoreBinaries": ["stryker", "tools/lint-staged-eslint.sh"],
       "ignoreDependencies": [
         "@earshot-tools/earshot-plugin",
         "@secretlint/secretlint-rule-preset-recommend",

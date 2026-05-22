@@ -1,10 +1,77 @@
-# Path-based ownership. Add real owners (GitHub handles or teams) as they
-# join. The defaults below ensure every change has someone reviewing.
+# CODEOWNERS for earshot-tools/earshot.
+#
+# AI sessions (Claude Code) commit as stivoo-bot. CODEOWNERS ensures the
+# repo owner (@inoyatov) reviews PRs that touch critical files. With
+# require_code_owner_reviews: true in branch protection, the bot cannot
+# merge PRs touching these files without owner approval.
+#
+# No default catch-all — only explicitly listed paths require owner
+# review. This lets the bot merge PRs touching unlisted files without
+# approval (e.g., source code under plugin/src/) while still gating
+# every change that could weaken enforcement.
+#
+# Mirrors the asal-world CODEOWNERS pattern. See docs/decisions/engineering/.
 
-* @earshot-tools
+# ── Gate files (quality + security infrastructure) ───
+# These control CI gates, linting, branch protection, and security policy.
+# Changes here can silently weaken enforcement. The bot CANNOT self-approve.
+/.github/workflows/                  @inoyatov
+/.github/CODEOWNERS                  @inoyatov
+/.github/pull_request_template.md    @inoyatov
+/.gitleaks.toml                      @inoyatov
+/.secretlintrc.json                  @inoyatov
+/.markdownlint-cli2.yaml             @inoyatov
+/.yamllint                           @inoyatov
+/.jscpd.json                         @inoyatov
+/.prettierrc                         @inoyatov
+/.prettierignore                     @inoyatov
+/.editorconfig                       @inoyatov
+/.stylelintrc.json                   @inoyatov
+/knip.json                           @inoyatov
+/lefthook.yml                        @inoyatov
+/commitlint.config.js                @inoyatov
+/eslint-rules/                       @inoyatov
+/tools/                              @inoyatov
+/scripts/check-flaky.mjs             @inoyatov
+/scripts/check-inline-suppressions.mjs @inoyatov
+/scripts/check-ai-doc-routing.mjs    @inoyatov
+/scripts/check-skill-content.sh      @inoyatov
+/scripts/codebase-check.sh           @inoyatov
+/scripts/pr-checks.sh                @inoyatov
+/scripts/required-checks.mjs         @inoyatov
 
-/shared/ @earshot-tools
+# ── DevOps / build / package config ─────────────────
+/.github/                            @inoyatov
+/Makefile                            @inoyatov
+/package.json                        @inoyatov
+/pnpm-workspace.yaml                 @inoyatov
+/tsconfig.base.json                  @inoyatov
+/tsconfig.json                       @inoyatov
+/esbuild.config.mjs                  @inoyatov
+/Brewfile                            @inoyatov
+/bin/                                @inoyatov
 
-/.github/ @earshot-tools
-/docs/ @earshot-tools
-/.claude/ @earshot-tools
+# ── TypeScript workspaces (production code) ─────────
+/plugin/                             @inoyatov
+/shared/                             @inoyatov
+
+# ── Native helper (Swift, system audio + TCC) ───────
+# Sensitive — code signing, microphone/screen-recording permissions,
+# subprocess lifecycle. Owner review required.
+/native/                             @inoyatov
+
+# ── Python diarizer ─────────────────────────────────
+/diarizer/                           @inoyatov
+
+# ── Docs and architecture ───────────────────────────
+/docs/decisions/                     @inoyatov
+/docs/architecture/                  @inoyatov
+/docs/conventions/                   @inoyatov
+/docs/runbooks/                      @inoyatov
+/docs/ai-index.md                    @inoyatov
+
+# ── Skills + agent routing (used by AI — high-leverage) ──
+/.claude/skills/                     @inoyatov
+/.claude/CLAUDE.md                   @inoyatov
+/.claude/settings.json               @inoyatov
+/AGENTS.md                           @inoyatov

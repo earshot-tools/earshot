@@ -37,10 +37,6 @@ export const SONARJS_OVERRIDE_RULES = {
   'sonarjs/no-identical-functions': 'error',
   'sonarjs/no-collapsible-if': 'error',
   'sonarjs/todo-tag': 'off',
-  // Disabled: peer-dep mismatch between sonarjs 2.x (typescript-eslint v7
-  // wrapper) and the v8 we ship. Re-enable when sonarjs 3.x is released
-  // and we upgrade.
-  'sonarjs/no-empty-function': 'off',
 }
 
 /** Import correctness rules. */

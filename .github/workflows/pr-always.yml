@@ -1,0 +1,96 @@
+---
+name: PR Always-On Checks
+
+# Mirrors asal-world's pr-always.yml: cheap, fast checks run on every PR
+# as SEPARATE named status checks (branch-name, prettier, md-lint, jscpd)
+# so each gate is visible on the PR page without clicking into log output.
+# Expensive jobs (lint, type-check, test, coverage, depcruise, etc.) stay
+# in ci.yml's aggregated "Quality gates" job.
+#
+# Earshot-specific notes:
+# - Inline-suppression + HANDOFF + REVIEW-STATE gates remain as standalone
+#   workflows because they re-evaluate on `pull_request_review` events,
+#   which asal-world's pr-always.yml does NOT do. Keeping them separate
+#   preserves stronger triggers.
+# - asal-world's cookie-allowlist job is omitted (no cookies in earshot).
+
+'on':
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: pr-always-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  check-branch-name:
+    name: Branch name convention
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate branch name
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          # Earshot's branch convention (also enforced by
+          # scripts/quality/branch-name-check.sh inside make ci-local):
+          # <area>/feature|fix/<issue>-<slug> or phase/<n>-<slug>.
+          PATTERN='^(plugin|shared|native|diarizer|devops|docs|deps|phase)/'
+          if ! echo "$BRANCH" | grep -qE "$PATTERN"; then
+            echo "::error::Branch name '$BRANCH' does not match convention:"
+            echo "          <area>/<type>/<issue>-<slug>  OR  phase/<n>-<slug>"
+            echo "          allowed area prefixes: plugin, shared, native, diarizer,"
+            echo "          devops, docs, deps"
+            exit 1
+          fi
+
+  prettier:
+    name: Prettier check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Prettier --check (matches make format-check)
+        run: pnpm exec prettier --check "**/*.{ts,tsx,js,jsx,json,md,yml,yaml}"
+
+  markdown-lint:
+    name: Markdown lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: markdownlint (matches make md-lint)
+        run: make md-lint
+
+  jscpd:
+    name: Copy/paste detection (jscpd)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: jscpd (matches make jscpd)
+        run: make jscpd

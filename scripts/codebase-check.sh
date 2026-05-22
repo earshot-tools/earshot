@@ -194,6 +194,57 @@ else
   row "S9" "type assertions (as X) — verify external data" "PASS" "0 hits"
 fi
 
+# S12: eslint-disable without per-rule scope — REVIEW. Suppression directives
+# with no rule name disable everything on the line, which is too broad.
+hits=$(prod_grep "eslint-disable(?!-next-line)" || true)
+hits2=$(prod_grep "eslint-disable-next-line\s*$" || true)
+all_hits="${hits}${hits2}"
+count=$(count_lines "$all_hits")
+if [ "$count" -gt 0 ]; then
+  files=$(echo "$all_hits" | cut -d: -f1 | sort -u | tr '\n' ', ' | sed 's/,$//')
+  row "S12" "eslint-disable (check scope/justification)" "REVIEW" \
+    "${count} hits in: ${files}"
+else
+  row "S12" "eslint-disable (check scope/justification)" "PASS" "0 hits"
+fi
+
+# C3: non-null assertion (`x!.y`) — REVIEW. ESLint already blocks this as
+# ERROR via @typescript-eslint/no-non-null-assertion; the codebase-check
+# row exists for parity with asal-world's audit table.
+hits=$(prod_grep "\w+\!\." || true)
+count=$(count_lines "$hits")
+if [ "$count" -gt 0 ]; then
+  row "C3" "non-null assertion (!)" "REVIEW" "${count} hits — manual check needed"
+else
+  row "C3" "non-null assertion (!)" "PASS" "0 hits"
+fi
+
+# C5: possible PII in logger calls — REVIEW. Earshot has no Logger today
+# (Phase-1 work) but the row exists so the moment a logger lands, PII-leak
+# patterns surface. Allowlist common non-PII identifiers.
+hits=$(prod_grep "logger\.(info|warn|error|debug).*\b(email|pin|password|token|secret|name)\b" \
+  | grep -v "tokenHash\|tokenId\|userId\|chainId\|deviceId\|publicId" || true)
+count=$(count_lines "$hits")
+if [ "$count" -gt 0 ]; then
+  row "C5" "possible PII in logs" "REVIEW" "${count} hits — manual check needed"
+else
+  row "C5" "possible PII in logs" "PASS" "0 hits"
+fi
+
+# C10: possible floating promises — REVIEW. ESLint already blocks this as
+# ERROR via @typescript-eslint/no-floating-promises; this row is the
+# bash-level safety net asal-world ships for cases where ESLint is bypassed.
+hits=$(prod_grep "^\s+[a-zA-Z]+\.[a-zA-Z]+\(" \
+  | grep -v "await \|return \|const \|let \|var \|= \|throw \|if \|else\|\/\/" \
+  | head -20 || true)
+count=$(count_lines "$hits")
+if [ "$count" -gt 0 ]; then
+  row "C10" "possible floating promises (no await)" "REVIEW" \
+    "${count} hits — manual check needed"
+else
+  row "C10" "possible floating promises (no await)" "PASS" "0 hits"
+fi
+
 # C7: Zod `.parse()` instead of `.safeParse()` — REVIEW. `.parse()` throws on
 # validation failure; `.safeParse()` returns a discriminated result. Earshot's
 # Zod schemas in shared/src/schemas/ should consistently use safeParse so the

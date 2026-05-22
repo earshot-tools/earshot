@@ -105,8 +105,8 @@ commit_file() {
   [[ "$output" == *"| A1   |"*"PASS"* ]]
 }
 
-@test "Total row count is 9" {
+@test "Total row count is 12" {
   commit_file "foo.ts" "export const x = 1"
   run bash "$SCRIPT" local
-  [[ "$output" == *"Total: 9 checks"* ]]
+  [[ "$output" == *"Total: 12 checks"* ]]
 }

@@ -35,6 +35,19 @@ const PATTERNS = [
   { name: 'py-type-ignore', regex: /#\s*type:\s*ignore\b/ },
   { name: 'py-bandit', regex: /#\s*nosec\b/ },
   { name: 'py-pragma-no-cover', regex: /#\s*pragma:\s*no\s*cover\b/ },
+  // Coverage-tool suppressions (vitest uses v8; istanbul + c8 are historical
+  // / alternative providers). Ported from asal-world's pr-always.yml.
+  { name: 'v8-ignore', regex: /v8\s+ignore\b/i },
+  { name: 'istanbul-ignore', regex: /istanbul\s+ignore\b/i },
+  { name: 'c8-ignore', regex: /c8\s+ignore\b/i },
+  // SonarJS suppression marker — earshot uses eslint-plugin-sonarjs.
+  { name: 'nosonar', regex: /NOSONAR\b/ },
+  // JetBrains IDE auto-inserted lint suppression.
+  { name: 'noinspection', regex: /noinspection\b/i },
+  // Clang/C++/Swift generic lint suppression.
+  { name: 'nolint', regex: /NOLINT\b/ },
+  // DeepSource / Codacy suppression marker.
+  { name: 'skipcq', regex: /skipcq\b/i },
 ]
 
 function sh(cmd) {
