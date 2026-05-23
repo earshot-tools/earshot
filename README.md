@@ -27,6 +27,16 @@ Or, if you already have Homebrew deps installed and only want JS deps:
 pnpm install
 ```
 
+### Install into an Obsidian vault
+
+After dev-environment setup, install the built plugin into a local vault:
+
+```bash
+scripts/install_to_vault.sh ~/path/to/your/vault
+```
+
+The script runs `pnpm run build`, then copies `main.js`, `manifest.json`, and `styles.css` into `<vault>/.obsidian/plugins/earshot/`. Enable the plugin in Obsidian under **Settings → Community plugins → Earshot**. Pass `SKIP_BUILD=1` to skip the build step (useful when iterating with a freshly-built `main.js`).
+
 ## Common commands
 
 ```bash

@@ -28,6 +28,7 @@
       "@stryker-mutator/core>ajv": ">=8.18.0",
       "tmp": ">=0.2.4",
       "@eslint/plugin-kit": ">=0.3.4",
+      "qs": ">=6.15.2",
       "@vitest/coverage-v8": "^3.0.0",
       "@vitest/runner": "^3.0.0",
       "@vitest/utils": "^3.0.0",
