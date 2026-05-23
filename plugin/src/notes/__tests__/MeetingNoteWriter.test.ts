@@ -13,7 +13,10 @@ interface FakeVault {
   create: ReturnType<typeof vi.fn>
   process: ReturnType<typeof vi.fn>
   getAbstractFileByPath: ReturnType<typeof vi.fn>
+  createFolder: ReturnType<typeof vi.fn>
 }
+
+type FakeVaultDep = Pick<Vault, 'create' | 'process' | 'getAbstractFileByPath' | 'createFolder'>
 
 interface LoggerSpy {
   debug: ReturnType<typeof vi.fn>
@@ -66,7 +69,11 @@ function makeVault(): FakeVault {
   return {
     create: vi.fn(),
     process: vi.fn(),
-    getAbstractFileByPath: vi.fn(),
+    // Default to "folder already exists" so existing tests do not need to
+    // worry about ensureFolder side effects; tests that need the missing-
+    // folder path set this to return null explicitly.
+    getAbstractFileByPath: vi.fn().mockReturnValue({ children: [] }),
+    createFolder: vi.fn().mockResolvedValue(undefined),
   }
 }
 
@@ -75,7 +82,7 @@ function makeWriter(vault: FakeVault, logger: Logger): MeetingNoteWriter {
   // MeetingNoteWriterDeps demands. A focused cast through `unknown` keeps the
   // test suite free of `any` while acknowledging the structural shim.
   const deps: MeetingNoteWriterDeps = {
-    vault: vault as unknown as Pick<Vault, 'create' | 'process' | 'getAbstractFileByPath'>,
+    vault: vault as unknown as FakeVaultDep,
     logger,
   }
   return new MeetingNoteWriter(deps)

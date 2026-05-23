@@ -22,7 +22,11 @@ const commands: CommandSpec[] = []
 let mockDataStore: unknown = null
 const vaultCreate = vi.fn()
 const vaultProcess = vi.fn()
-const vaultGetAbstractFileByPath = vi.fn()
+// Default to "folder exists" so the MeetingNoteWriter.ensureFolder step is a
+// no-op in main.test.ts (the missing-folder path is exercised in
+// MeetingNoteWriter.test.ts).
+const vaultGetAbstractFileByPath = vi.fn().mockReturnValue({ children: [] })
+const vaultCreateFolder = vi.fn().mockResolvedValue(undefined)
 
 // Mocked Plugin shim mirrors only the subset of `obsidian.Plugin` that
 // EarshotPlugin actually uses (app.vault triple, loadData/saveData,
@@ -35,6 +39,7 @@ vi.mock('obsidian', () => {
         create: vaultCreate,
         process: vaultProcess,
         getAbstractFileByPath: vaultGetAbstractFileByPath,
+        createFolder: vaultCreateFolder,
       },
     }
     public async loadData(): Promise<unknown> {
@@ -132,6 +137,11 @@ beforeEach(() => {
   vaultCreate.mockReset()
   vaultProcess.mockReset()
   vaultGetAbstractFileByPath.mockReset()
+  // Restore default-folder-exists behavior so non-ensureFolder tests don't
+  // hit the createFolder branch unintentionally.
+  vaultGetAbstractFileByPath.mockReturnValue({ children: [] })
+  vaultCreateFolder.mockReset()
+  vaultCreateFolder.mockResolvedValue(undefined)
 })
 
 describe('module shape', () => {

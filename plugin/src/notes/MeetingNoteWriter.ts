@@ -42,7 +42,7 @@ export interface MarkCompletedOptions {
 }
 
 export interface MeetingNoteWriterDeps {
-  readonly vault: Pick<Vault, 'create' | 'process' | 'getAbstractFileByPath'>
+  readonly vault: Pick<Vault, 'create' | 'process' | 'getAbstractFileByPath' | 'createFolder'>
   readonly logger: Logger
 }
 
@@ -65,6 +65,7 @@ export class MeetingNoteWriter {
   public async createNote(opts: CreateNoteOptions): Promise<TFile> {
     const path = buildPath(opts.meetingFolder, opts.title)
     const body = renderInitialBody(opts)
+    await this.ensureFolder(opts.meetingFolder)
     try {
       const file = await this.vault.create(path, body)
       this.logger.info('meeting note created', { path })
@@ -73,6 +74,25 @@ export class MeetingNoteWriter {
       const reason = error instanceof Error ? error.message : String(error)
       this.logger.error('failed to create meeting note', { path, reason })
       throw new Error(`cannot create meeting note at ${path}: ${reason}`)
+    }
+  }
+
+  // Obsidian's Vault.create requires the parent folder to exist; it does not
+  // auto-create. The first dogfood install surfaced this when a fresh vault
+  // had no `Meetings/` directory and Start failed silently with "Folder does
+  // not exist". This pre-creates the folder when missing; existing folders
+  // are a no-op. An empty meetingFolder means vault-root, which always exists.
+  private async ensureFolder(meetingFolder: string): Promise<void> {
+    if (meetingFolder === '') return
+    const existing = this.vault.getAbstractFileByPath(meetingFolder)
+    if (existing !== null) return
+    try {
+      await this.vault.createFolder(meetingFolder)
+      this.logger.info('created meeting folder', { meetingFolder })
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error)
+      this.logger.error('failed to create meeting folder', { meetingFolder, reason })
+      throw new Error(`cannot create meeting folder ${meetingFolder}: ${reason}`)
     }
   }
 
