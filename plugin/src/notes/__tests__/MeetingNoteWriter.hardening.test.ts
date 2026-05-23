@@ -30,7 +30,10 @@ interface FakeVault {
   create: ReturnType<typeof vi.fn>
   process: ReturnType<typeof vi.fn>
   getAbstractFileByPath: ReturnType<typeof vi.fn>
+  createFolder: ReturnType<typeof vi.fn>
 }
+
+type FakeVaultDep = Pick<Vault, 'create' | 'process' | 'getAbstractFileByPath' | 'createFolder'>
 
 interface LoggerSpy {
   debug: ReturnType<typeof vi.fn>
@@ -60,12 +63,17 @@ function makeLogger(): LoggerSpy {
 }
 
 function makeVault(): FakeVault {
-  return { create: vi.fn(), process: vi.fn(), getAbstractFileByPath: vi.fn() }
+  return {
+    create: vi.fn(),
+    process: vi.fn(),
+    getAbstractFileByPath: vi.fn().mockReturnValue({ children: [] }),
+    createFolder: vi.fn().mockResolvedValue(undefined),
+  }
 }
 
 function makeWriter(vault: FakeVault, logger: Logger): MeetingNoteWriter {
   const deps: MeetingNoteWriterDeps = {
-    vault: vault as unknown as Pick<Vault, 'create' | 'process' | 'getAbstractFileByPath'>,
+    vault: vault as unknown as FakeVaultDep,
     logger,
   }
   return new MeetingNoteWriter(deps)
